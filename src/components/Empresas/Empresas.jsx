@@ -18,13 +18,32 @@ import {
 } from "./Empresas.styles";
 
 const VIDEO_SRC = "/assets/generated/empresas-notebook.mp4";
-const FRAME_COUNT = 40;
+// Longer clip now (opening + typing, ~10s vs the previous 5s loop), so more samples to
+// keep the same temporal resolution.
+const FRAME_COUNT = 64;
+
+// Fraction of the scroll-progress range where the lid finishes opening AND the hands have
+// had time to settle onto the keyboard — estimated, not measured from an actual frame (may
+// need a calibration pass once seen). Pushed further out than the lid-open point itself so
+// logos don't start while the hands are still mid-air moving down to the keys.
+const OPEN_THRESHOLD = 0.78;
+const SCREEN_FADE_IN = 0.08; // how much extra progress the screen itself takes to fade in after that
 
 const LOGOS = [
   { src: "/assets/logos/netflix.svg", alt: "Netflix" },
   { src: "/assets/logos/amazon.svg", alt: "Amazon" },
   { src: "/assets/logos/ifood.svg", alt: "iFood" },
   { src: "/assets/logos/mercadolivre.svg", alt: "Mercado Livre" },
+];
+
+// Each logo now gets a real hold (a pause at full opacity) instead of directly cross-fading
+// into the next one — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequential within the
+// range left after OPEN_THRESHOLD.
+const LOGO_WINDOWS = [
+  [0.78, 0.8, 0.825, 0.835],
+  [0.835, 0.855, 0.88, 0.89],
+  [0.89, 0.91, 0.935, 0.945],
+  [0.945, 0.965, 0.99, 1],
 ];
 
 const EYEBROW_TEXT = "Mercado aquecido e você preparado";
@@ -87,6 +106,7 @@ function animateSequentialItem(t, fadeInStart, fadeInEnd, holdEnd, fadeOutEnd, r
 export function Empresas() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
+  const screenOverlayRef = useRef(null);
   const titleGroupRef = useRef(null);
   const cardsColRef = useRef(null);
   const logoRefs = useRef([]);
@@ -152,11 +172,19 @@ export function Empresas() {
         }
       }
 
-      // Screen: logos cross-fade in sequence, in sync with the same scroll progress.
-      const floatLogoIndex = progress * (LOGOS.length - 1);
+      // Screen: hidden while the lid is closed/opening (nothing to show yet), fades in
+      // right as the lid finishes opening, then the logos cross-fade within what's left
+      // of the scroll range — not the full 0..1 range like before.
+      if (screenOverlayRef.current) {
+        const screenOpacity = clamp01((progress - OPEN_THRESHOLD) / SCREEN_FADE_IN);
+        screenOverlayRef.current.style.opacity = screenOpacity.toFixed(3);
+      }
+      // Each logo fades in, holds, then fades out before the next one starts — no more
+      // continuous overlap between neighbors.
       logoRefs.current.forEach((el, i) => {
         if (!el) return;
-        const opacity = Math.max(0, 1 - Math.abs(floatLogoIndex - i));
+        const [a, b, c, d] = LOGO_WINDOWS[i];
+        const { opacity } = animateSequentialItem(progress, a, b, c, d, 0, 1);
         el.style.opacity = opacity.toFixed(3);
       });
 
@@ -180,7 +208,7 @@ export function Empresas() {
     [frames]
   );
 
-  useStickyScrub(containerRef, { distance: 2.2, onUpdate: render });
+  useStickyScrub(containerRef, { distance: 3.6, onUpdate: render });
 
   useEffect(() => {
     if (primaryReady) {
@@ -208,7 +236,7 @@ export function Empresas() {
       <NotebookStage>
         <NotebookCanvas ref={canvasRef} data-ready={primaryReady} />
         <Vignette />
-        <ScreenOverlay>
+        <ScreenOverlay ref={screenOverlayRef}>
           {LOGOS.map((logo, i) => (
             <LogoImg key={logo.alt} ref={(el) => (logoRefs.current[i] = el)} src={logo.src} alt={logo.alt} />
           ))}

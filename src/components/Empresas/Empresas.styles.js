@@ -130,25 +130,28 @@ export const Vignette = styled.div`
   );
 `;
 
-/* Positioned over the blank screen area of the generated clip (measured as percentages,
-   so it scales together with the video at any size). Estimated for the 16:9 reframe —
-   may need a small calibration pass once seen rendered. */
+/* Positioned over the blank screen area of the generated clip once the lid is open
+   (measured as percentages, so it scales with the video at any size). Horizontal centering
+   and size confirmed good from a user screenshot; nudged up slightly this round for full
+   centering. Starts hidden (lid closed). */
 export const ScreenOverlay = styled.div`
   position: absolute;
-  left: 35.75%;
-  top: 35.5%;
-  width: 29.25%;
-  height: 35%;
+  left: 31%;
+  top: 9%;
+  width: 44%;
+  height: 32%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6%;
+  padding: 8%;
 `;
 
 export const LogoImg = styled.img`
   position: absolute;
-  max-width: 82%;
-  max-height: 70%;
+  max-width: 60%;
+  max-height: 55%;
   width: auto;
   height: auto;
   object-fit: contain;
