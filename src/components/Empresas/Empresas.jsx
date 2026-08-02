@@ -32,42 +32,46 @@ const TITLE_TEXT = "Domine além do código";
 const CARDS = [
   "Aqui você não só aprende a escrever código",
   "Você aprende como o mercado de trabalho funciona",
-  "E ficar preparado para trabalhar em empresas de alto nível",
+  "E como estar preparado para trabalhar em empresas de alto nível",
 ];
 
-// Title (+ eyebrow, animated together) only has [fadeInStart, fadeInEnd] — once in, stays.
-const TITLE_WINDOW = [0, 0.22];
+// Title (+ eyebrow) doesn't move — it just fades in slowly, in place — so it only needs
+// [fadeInStart, fadeInEnd]; once in, it stays.
+const TITLE_WINDOW = [0, 0.14];
 
 // Cards: [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd] in scroll-progress (0..1) —
-// sequential, one fully gone before the next starts appearing.
+// sequential, one fully gone before the next starts appearing. Fade-in windows are
+// intentionally short (fast) now that easing does the work of making the rise feel smooth.
 const CARD_WINDOWS = [
-  [0.22, 0.38, 0.44, 0.48],
-  [0.48, 0.64, 0.7, 0.74],
-  [0.74, 0.9, 0.96, 1],
+  [0.14, 0.24, 0.38, 0.43],
+  [0.43, 0.53, 0.67, 0.72],
+  [0.72, 0.82, 0.96, 1],
 ];
 
-// While entering, opacity ramps to 1 within this fraction of the fade-in window — kept
-// well under 1 so the item is still visibly traveling (not just fading in place), but
-// raised so the fade-in itself reads as gradual rather than near-instant.
-const ENTER_OPACITY_FRACTION = 0.45;
+// Cards: opacity ramps to 1 within this fraction of the fade-in window — kept under 1 so
+// the card is still visibly traveling (not just fading in place). The title has no travel,
+// so it uses fraction 1 (opacity eases gradually across its whole window instead).
+const CARD_OPACITY_FRACTION = 0.55;
 const EXIT_RISE_PX = 48;
 const ENTER_RISE_BUFFER_PX = 40;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
 /**
- * Animates one sequential item: rises from `riseDistance` below into place (visible early,
- * per ENTER_OPACITY_FRACTION), optionally holds, then optionally fades out while drifting up.
- * Pass holdEnd/fadeOutEnd as Infinity for an item that should stay in place once it arrives
- * (used for the title).
+ * Animates one sequential item: rises from `riseDistance` below into place (fully eased,
+ * not linear — a linear translate reads as stiff/mechanical), then optionally holds, then
+ * optionally fades out while drifting up. `riseDistance: 0` gives a pure in-place fade (used
+ * for the title). Pass holdEnd/fadeOutEnd as Infinity for an item that should stay once in.
  */
-function animateSequentialItem(t, fadeInStart, fadeInEnd, holdEnd, fadeOutEnd, riseDistance) {
+function animateSequentialItem(t, fadeInStart, fadeInEnd, holdEnd, fadeOutEnd, riseDistance, opacityFraction = CARD_OPACITY_FRACTION) {
   if (t <= fadeInStart) return { opacity: 0, translateY: riseDistance };
 
   if (t < fadeInEnd) {
     const posT = (t - fadeInStart) / (fadeInEnd - fadeInStart);
-    const opacityT = clamp01((t - fadeInStart) / ((fadeInEnd - fadeInStart) * ENTER_OPACITY_FRACTION));
-    return { opacity: opacityT, translateY: (1 - posT) * riseDistance };
+    const easedPos = easeOutCubic(posT);
+    const opacityT = clamp01(posT / opacityFraction);
+    return { opacity: opacityT, translateY: (1 - easedPos) * riseDistance };
   }
 
   if (t <= holdEnd) return { opacity: 1, translateY: 0 };
@@ -87,7 +91,6 @@ export function Empresas() {
   const cardsColRef = useRef(null);
   const logoRefs = useRef([]);
   const cardRefs = useRef([]);
-  const titleRiseRef = useRef(400);
   const cardsRiseRef = useRef(400);
 
   const { frames, primaryReady } = useVideoFrames(VIDEO_SRC, {
@@ -95,20 +98,10 @@ export function Empresas() {
     priorityIndex: 0,
   });
 
-  // How far below its resting spot an element must start to genuinely come from the
-  // bottom edge of the screen — measured against the real viewport, per element (the
-  // title and the cards rest at different heights, so each needs its own distance).
+  // How far below its resting spot the cards column must start to genuinely come from the
+  // bottom edge of the screen — measured against the real viewport. The title doesn't move,
+  // so it needs no such measurement (see the `riseDistance: 0` call further down).
   const measureRiseDistances = useCallback(() => {
-    if (titleGroupRef.current) {
-      // The title itself gets a transform once animated, so reset it before measuring —
-      // otherwise we'd be measuring its already-shifted position, not its resting one.
-      const el = titleGroupRef.current;
-      const prevTransform = el.style.transform;
-      el.style.transform = "none";
-      const rect = el.getBoundingClientRect();
-      el.style.transform = prevTransform;
-      titleRiseRef.current = Math.max(window.innerHeight - rect.top + ENTER_RISE_BUFFER_PX, 0);
-    }
     if (cardsColRef.current) {
       // CardsCol itself is never transformed (only the Card children inside it are),
       // so its position is always reliable to read directly.
@@ -167,12 +160,12 @@ export function Empresas() {
         el.style.opacity = opacity.toFixed(3);
       });
 
-      // Title: rises once, then stays.
+      // Title: no travel, just a slow in-place fade (riseDistance 0, opacity eases across
+      // the whole window instead of a fast fraction of it) — then stays.
       if (titleGroupRef.current) {
         const [a, b] = TITLE_WINDOW;
-        const { opacity, translateY } = animateSequentialItem(progress, a, b, Infinity, Infinity, titleRiseRef.current);
+        const { opacity } = animateSequentialItem(progress, a, b, Infinity, Infinity, 0, 1);
         titleGroupRef.current.style.opacity = opacity.toFixed(3);
-        titleGroupRef.current.style.transform = `translateY(${translateY.toFixed(2)}px)`;
       }
 
       // Cards: rise in visibly, hold, then fade while drifting up — sequential.
