@@ -4,6 +4,7 @@ import { GlobalStyle } from "./styles/GlobalStyle";
 import { useLenis } from "./hooks/useLenis";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
+import { Empresas } from "./components/Empresas";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -16,6 +17,7 @@ function App() {
       <Header />
       <main>
         <Hero />
+        <Empresas />
       </main>
     </ThemeProvider>
   );

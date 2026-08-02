@@ -7,6 +7,7 @@ export const theme = {
     primaryDark: "#A8CC1F",
     blue: "#2563EB",
     blueHover: "#1D4ED8",
+    blueLight: "#60A5FA",
     text: "#F5F5F5",
     textMuted: "#9A9A9A",
     border: "rgba(255, 255, 255, 0.08)",
