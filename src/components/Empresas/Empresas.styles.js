@@ -136,7 +136,7 @@ export const Vignette = styled.div`
    centering. Starts hidden (lid closed). */
 export const ScreenOverlay = styled.div`
   position: absolute;
-  left: 31%;
+  left: 27%;
   top: 9%;
   width: 44%;
   height: 32%;

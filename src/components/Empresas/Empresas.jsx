@@ -36,9 +36,10 @@ const LOGOS = [
   { src: "/assets/logos/mercadolivre.svg", alt: "Mercado Livre" },
 ];
 
-// Each logo now gets a real hold (a pause at full opacity) instead of directly cross-fading
-// into the next one — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequential within the
-// range left after OPEN_THRESHOLD.
+// Each logo gets a real hold (a pause at full opacity) instead of directly cross-fading into
+// the next one — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequential within the range
+// left after OPEN_THRESHOLD. The last entry's holdEnd/fadeOutEnd are overridden to Infinity
+// at render time (see the isLast check below), so it stays instead of fading out.
 const LOGO_WINDOWS = [
   [0.78, 0.8, 0.825, 0.835],
   [0.835, 0.855, 0.88, 0.89],
@@ -116,6 +117,7 @@ export function Empresas() {
   const { frames, primaryReady } = useVideoFrames(VIDEO_SRC, {
     frameCount: FRAME_COUNT,
     priorityIndex: 0,
+    coarseCount: 0, // no motion-curve smoothing needed here — a plain typing loop, not a turn
   });
 
   // How far below its resting spot the cards column must start to genuinely come from the
@@ -179,12 +181,15 @@ export function Empresas() {
         const screenOpacity = clamp01((progress - OPEN_THRESHOLD) / SCREEN_FADE_IN);
         screenOverlayRef.current.style.opacity = screenOpacity.toFixed(3);
       }
-      // Each logo fades in, holds, then fades out before the next one starts — no more
-      // continuous overlap between neighbors.
+      // Each logo fades in, holds, then fades out before the next one starts — except the
+      // last one (Mercado Livre), which stays once it arrives instead of leaving the screen
+      // blank at the end of the scroll.
+      const lastLogoIndex = LOGOS.length - 1;
       logoRefs.current.forEach((el, i) => {
         if (!el) return;
         const [a, b, c, d] = LOGO_WINDOWS[i];
-        const { opacity } = animateSequentialItem(progress, a, b, c, d, 0, 1);
+        const isLast = i === lastLogoIndex;
+        const { opacity } = animateSequentialItem(progress, a, b, isLast ? Infinity : c, isLast ? Infinity : d, 0, 1);
         el.style.opacity = opacity.toFixed(3);
       });
 

@@ -9,7 +9,16 @@ const VIDEO_SRC = "/assets/generated/hero-rodolfo.mp4";
 // Finer sampling keeps neighboring frames close in pose, so the cross-fade below blends
 // near-identical images instead of visibly different ones (which reads as a "ghosted" jump).
 const FRAME_COUNT = 60;
-const MAX_BLUR_PX = 8;
+// A quick, coarse sweep (see useVideoFrames) so we have a correct *pacing* curve almost
+// immediately on load. That curve is kept forever once computed — the fine 60-frame set only
+// adds more images to sample from (visual smoothness), it never recomputes/replaces the
+// pacing itself, so there's no "hand-off" moment that can ever jump or glitch.
+const COARSE_COUNT = 16;
+const MAX_BLUR_PX = 7;
+// Blur falls off with (1 - eased) raised to this power instead of linearly — a linear falloff
+// kept him uncomfortably blurry through the middle of the turn. A higher power front-loads the
+// blur onto "de costas" (still fully blurred there) and clears up quickly once he starts turning.
+const BLUR_FALLOFF_POWER = 2.5;
 const RIGHT_MARGIN_RATIO = 0.06;
 const ZOOM_START = 1;
 const ZOOM_END = 1.18;
@@ -33,6 +42,18 @@ const LETTER_REVEAL_WINDOW = 0.45;
 
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
+// Maps `eased` (0..1 scroll progress) to a target ratio (0..1 position in the raw clip) via
+// the motion curve — independent of which frame array we'll eventually sample from.
+function targetRawRatio(curve, eased) {
+  const startIndex = Math.round(RAW_START_RATIO * (curve.length - 1));
+  const endIndex = Math.round(RAW_END_RATIO * (curve.length - 1));
+  const motionAtStart = curve[startIndex];
+  const motionAtEnd = curve[endIndex];
+  const targetMotion = motionAtStart + (motionAtEnd - motionAtStart) * eased;
+  const curveIndex = curveIndexAt(curve, targetMotion);
+  return curveIndex / (curve.length - 1);
+}
+
 export function Hero() {
   const containerRef = useRef(null);
   const headingRef = useRef(null);
@@ -50,9 +71,10 @@ export function Hero() {
   }, []);
 
   const restingFrameIndex = useMemo(() => Math.round(RAW_START_RATIO * (FRAME_COUNT - 1)), []);
-  const { frames, primaryReady, ready } = useVideoFrames(VIDEO_SRC, {
+  const { frames, coarseFrames, primaryReady, coarseReady, ready } = useVideoFrames(VIDEO_SRC, {
     frameCount: FRAME_COUNT,
     priorityIndex: restingFrameIndex,
+    coarseCount: COARSE_COUNT,
   });
 
   const measurePositions = useCallback(() => {
@@ -76,14 +98,13 @@ export function Hero() {
     return () => window.removeEventListener("resize", measurePositions);
   }, [measurePositions]);
 
-  // Once every frame is in, measure how much each one visually differs from the next and
-  // build a motion curve — lets us later map scroll to "amount of visual change" instead of
-  // raw video time, so a source clip that holds a pose then jumps still reads as constant speed.
+  // Computed once, from the fast coarse sweep, and never recomputed — see the note on
+  // COARSE_COUNT above for why that matters.
   useEffect(() => {
-    if (ready) {
-      motionCurveRef.current = computeMotionCurve(frames.current);
+    if (coarseReady && !motionCurveRef.current) {
+      motionCurveRef.current = computeMotionCurve(coarseFrames.current);
     }
-  }, [ready, frames]);
+  }, [coarseReady, coarseFrames]);
 
   const render = useCallback(
     (progress) => {
@@ -105,30 +126,30 @@ export function Hero() {
         const left = centerX + (rightX - centerX) * eased;
         stage.style.left = `${left}px`;
         stage.style.transform = "translateY(-50%)";
-        stage.style.filter = `blur(${(MAX_BLUR_PX * (1 - eased)).toFixed(2)}px)`;
+        const blurAmount = MAX_BLUR_PX * Math.pow(1 - eased, BLUR_FALLOFF_POWER);
+        stage.style.filter = `blur(${blurAmount.toFixed(2)}px)`;
       }
 
       const canvas = canvasRef.current;
-      const list = frames.current;
+      const curve = motionCurveRef.current;
+      // Fine frames refine visual smoothness once fully loaded; coarse frames (ready much
+      // sooner) are the fallback. Either way the curve above is the same, so switching from
+      // one array to the other just picks a nearer frame on the same timeline — never a jump.
+      const usingFine = ready && frames.current.length > 0;
+      const list = usingFine ? frames.current : coarseFrames.current;
+
       if (canvas && list.length) {
-        const startIndex = Math.round(RAW_START_RATIO * (list.length - 1));
-        const endIndex = Math.round(RAW_END_RATIO * (list.length - 1));
-        const curve = motionCurveRef.current;
+        const floatIndex = curve
+          ? targetRawRatio(curve, eased) * (list.length - 1)
+          : Math.round(RAW_START_RATIO * (list.length - 1));
 
-        let floatIndex;
-        if (curve && curve.length === list.length) {
-          const motionAtStart = curve[startIndex];
-          const motionAtEnd = curve[endIndex];
-          const targetMotion = motionAtStart + (motionAtEnd - motionAtStart) * eased;
-          floatIndex = curveIndexAt(curve, targetMotion);
-        } else {
-          const rawT = RAW_START_RATIO + (RAW_END_RATIO - RAW_START_RATIO) * eased;
-          floatIndex = rawT * (list.length - 1);
-        }
-
-        const indexA = Math.floor(floatIndex);
-        const indexB = Math.min(indexA + 1, list.length - 1);
-        const blend = floatIndex - indexA;
+        // Cross-fading between neighbors only looks good when they're close in pose, which
+        // is only guaranteed with the dense 60-frame set — the sparse 16-frame coarse set has
+        // neighbors far enough apart in pose that blending them ghosts into a double-exposure.
+        // So: blend on the fine set, hard-cut to the single nearest frame on the coarse one.
+        const indexA = usingFine ? Math.floor(floatIndex) : Math.round(floatIndex);
+        const indexB = usingFine ? Math.min(indexA + 1, list.length - 1) : indexA;
+        const blend = usingFine ? floatIndex - indexA : 0;
         const frameA = list[indexA];
         const frameB = list[indexB];
 
@@ -170,7 +191,7 @@ export function Hero() {
         // canvas already shows rather than flashing it blank.
       }
     },
-    [frames]
+    [frames, coarseFrames, ready]
   );
 
   useStickyScrub(containerRef, { distance: 2, onUpdate: render, progressRef: scrollProgressRef });
@@ -183,8 +204,16 @@ export function Hero() {
     }
   }, [primaryReady, render, measurePositions]);
 
-  // Once the motion curve is ready, re-paint at the current scroll position so the
-  // equalized pacing takes effect immediately instead of waiting for the next scroll tick.
+  // Once the (only, permanent) motion curve is ready, re-paint at the current scroll position
+  // so correctly-paced scrubbing takes effect immediately instead of waiting for the next tick.
+  useEffect(() => {
+    if (coarseReady) {
+      render(scrollProgressRef.current);
+    }
+  }, [coarseReady, render]);
+
+  // Once the fine frames are fully loaded, re-paint again — refines to full visual smoothness
+  // (same pacing as above, just more frames to choose from).
   useEffect(() => {
     if (ready) {
       render(scrollProgressRef.current);

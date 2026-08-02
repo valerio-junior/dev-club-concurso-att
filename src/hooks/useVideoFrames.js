@@ -1,25 +1,36 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Extracts `frameCount` evenly-spaced frames from a video file, in-browser (no server/ffmpeg
- * dependency), so they can be scrubbed on a canvas frame-by-frame in sync with scroll.
+ * Extracts frames from a video file, in-browser (no server/ffmpeg dependency), so they can
+ * be scrubbed on a canvas frame-by-frame in sync with scroll. Two passes:
  *
- * `priorityIndex` (if given) is captured first so callers can show real content almost
- * immediately (one seek) instead of waiting for every frame to finish extracting.
+ * 1. Coarse: a quick, evenly-spaced sweep of `coarseCount` frames across the whole clip
+ *    (resting/`priorityIndex` position captured first). Fast enough to build a rough-but-
+ *    correct motion curve almost immediately, instead of scrubbing must wait for the full
+ *    fine pass to have *any* correctly-paced motion.
+ * 2. Fine: the full `frameCount` pass (priority frame first), refining smoothness once done.
+ *
+ * Both passes share the same ratio space (frame i represents time `i/(N-1) * duration`), so
+ * a caller building a motion curve from either array is describing the same timeline — just
+ * at different resolutions — and can hand off from coarse to fine without a jump.
  */
-export function useVideoFrames(src, { frameCount = 60, priorityIndex } = {}) {
+export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCount = 16 } = {}) {
   const [ready, setReady] = useState(false);
   const [primaryReady, setPrimaryReady] = useState(false);
+  const [coarseReady, setCoarseReady] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const framesRef = useRef([]);
+  const coarseFramesRef = useRef([]);
 
   useEffect(() => {
     if (!src) return undefined;
 
     let cancelled = false;
     framesRef.current = new Array(frameCount).fill(null);
+    coarseFramesRef.current = new Array(coarseCount).fill(null);
     setReady(false);
     setPrimaryReady(false);
+    setCoarseReady(false);
     setLoadingProgress(0);
 
     const video = document.createElement("video");
@@ -41,11 +52,20 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex } = {}) {
         video.currentTime = time;
       });
 
-    const captureIndex = async (index, duration) => {
-      const time = Math.min((index / (frameCount - 1)) * duration, duration - 0.05);
+    const captureAtRatio = async (ratio, duration) => {
+      const time = Math.min(ratio * duration, duration - 0.05);
       await seekTo(time);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      framesRef.current[index] = await createImageBitmap(canvas);
+      return createImageBitmap(canvas);
+    };
+
+    const orderedIndices = (length, wantedFirst) => {
+      const order = Array.from({ length }, (_, i) => i);
+      if (wantedFirst != null && wantedFirst >= 0 && wantedFirst < length) {
+        order.splice(order.indexOf(wantedFirst), 1);
+        order.unshift(wantedFirst);
+      }
+      return order;
     };
 
     const extract = async () => {
@@ -59,19 +79,36 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex } = {}) {
       canvas.height = video.videoHeight;
       const duration = video.duration;
 
-      const order = Array.from({ length: frameCount }, (_, i) => i);
-      if (priorityIndex != null && priorityIndex >= 0 && priorityIndex < frameCount) {
-        order.splice(order.indexOf(priorityIndex), 1);
-        order.unshift(priorityIndex);
-      }
+      // priorityIndex is a fine-array index; translate it to the equivalent ratio so the
+      // coarse pass can grab the same pose first too.
+      const priorityRatio = priorityIndex != null ? priorityIndex / (frameCount - 1) : null;
+      const coarsePriorityIndex =
+        priorityRatio != null ? Math.round(priorityRatio * (coarseCount - 1)) : null;
 
+      // Pass 1: coarse sweep, resting pose first — unlocks a correctly-paced (if chunky)
+      // scrub almost immediately. Skipped entirely when coarseCount is 0 (callers that don't
+      // need curve-corrected pacing, e.g. a plain looping clip) — primaryReady falls back to
+      // firing from the fine pass in that case, further down.
+      const usingCoarse = coarseCount > 0;
+      if (usingCoarse) {
+        for (const i of orderedIndices(coarseCount, coarsePriorityIndex)) {
+          if (cancelled) return;
+          const ratio = coarseCount > 1 ? i / (coarseCount - 1) : 0;
+          coarseFramesRef.current[i] = await captureAtRatio(ratio, duration);
+          if (i === (coarsePriorityIndex ?? 0)) setPrimaryReady(true);
+        }
+      }
+      if (!cancelled) setCoarseReady(true);
+
+      // Pass 2: fine sweep, refines to full smoothness.
       let done = 0;
-      for (const index of order) {
+      for (const index of orderedIndices(frameCount, priorityIndex)) {
         if (cancelled) return;
-        await captureIndex(index, duration);
+        const ratio = frameCount > 1 ? index / (frameCount - 1) : 0;
+        framesRef.current[index] = await captureAtRatio(ratio, duration);
         done += 1;
         setLoadingProgress(done / frameCount);
-        if (index === (priorityIndex ?? order[0])) setPrimaryReady(true);
+        if (!usingCoarse && index === (priorityIndex ?? 0)) setPrimaryReady(true);
       }
 
       if (!cancelled) setReady(true);
@@ -85,7 +122,7 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex } = {}) {
       cancelled = true;
       video.src = "";
     };
-  }, [src, frameCount, priorityIndex]);
+  }, [src, frameCount, priorityIndex, coarseCount]);
 
-  return { frames: framesRef, ready, primaryReady, loadingProgress };
+  return { frames: framesRef, coarseFrames: coarseFramesRef, ready, primaryReady, coarseReady, loadingProgress };
 }
