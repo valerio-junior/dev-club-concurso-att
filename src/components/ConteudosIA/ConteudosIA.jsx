@@ -5,7 +5,9 @@ import {
   Wrapper,
   Inner,
   LeftCol,
+  DescriptionStack,
   Description,
+  DescriptionOverlay,
   IconRow,
   IconWrap,
   IconImg,
@@ -24,11 +26,11 @@ const FRAME_COUNT = 60;
 const SKIP_SECONDS = 2.5;
 
 const ICONS = [
-  { src: "/assets/logos/ai/gemini.svg", alt: "Gemini" },
+  { src: "/assets/logos/ai/gemini.svg", alt: "Gemini", background: "linear-gradient(135deg, #4C8DF6, #9B72CB)" },
   { src: "/assets/logos/ai/chatgpt.svg", alt: "ChatGPT" },
-  { src: "/assets/logos/ai/claude.svg", alt: "Claude" },
+  { src: "/assets/logos/ai/claude.svg", alt: "Claude", background: "linear-gradient(135deg, #F0A875, #D97757)" },
   { src: "/assets/logos/ai/copilot.svg", alt: "Copilot" },
-  { src: "/assets/logos/ai/notion.svg", alt: "Notion" },
+  { src: "/assets/logos/ai/meta-ai.svg", alt: "Meta AI", background: "linear-gradient(135deg, #4E7FE1, #2E5FD9)" },
 ];
 // Each icon's shine sweep gets its own slot in the loop (icon i starts at i * SHINE_CYCLE /
 // count), so only one icon is ever mid-sweep at a time, in left-to-right sequence.
@@ -38,9 +40,17 @@ const TEXT_WINDOW = 0.15;
 const ICONS_START = 0.13;
 const ICONS_END = 0.32;
 const ICONS_REVEAL_FRACTION = 0.55;
-const VIDEO_FADE_START = 0.34;
-const VIDEO_FADE_END = 0.42;
-const VIDEO_SCRUB_START = 0.42;
+// Wide fade-in window (was a snappy 0.08 — read as "popping in" instead of tracking scroll) so
+// the video stage eases in gradually as the user scrolls, overlapping the tail of the icons
+// reveal instead of only starting once they're fully done.
+const VIDEO_FADE_START = 0.25;
+const VIDEO_FADE_END = 0.55;
+const VIDEO_SCRUB_START = 0.55;
+// The first description crossfades into the second one during this window, synced with the
+// Rodolfo transformation already underway (VIDEO_SCRUB_START) — the icons row is untouched by
+// this and stays visible throughout.
+const DESC_SWAP_START = 0.6;
+const DESC_SWAP_END = 0.82;
 const FOCUS_Y = 0.38;
 // The regenerated clip's own background now already matches #0d131a (fixed at the source via
 // a flat-background reference photo), so this is back to a light safety net for any minor
@@ -54,6 +64,7 @@ const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
   const containerRef = useRef(null);
   const descRef = useRef(null);
+  const desc2Ref = useRef(null);
   const iconRefs = useRef([]);
   const stageRef = useRef(null);
   const canvasRef = useRef(null);
@@ -88,10 +99,33 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
 
   const render = useCallback(
     (progress) => {
-      const textT = clamp01(progress / TEXT_WINDOW);
+      // First description: fades/rises in as before, then — once the transformation is well
+      // underway — fades/drifts back out as the second description crossfades over it.
       if (descRef.current) {
-        descRef.current.style.opacity = textT.toFixed(3);
-        descRef.current.style.transform = `translateY(${((1 - textT) * 24).toFixed(2)}px)`;
+        let opacity;
+        let y;
+        if (progress < TEXT_WINDOW) {
+          const t = clamp01(progress / TEXT_WINDOW);
+          opacity = t;
+          y = (1 - t) * 24;
+        } else if (progress <= DESC_SWAP_START) {
+          opacity = 1;
+          y = 0;
+        } else {
+          const t = easeOutCubic(clamp01((progress - DESC_SWAP_START) / (DESC_SWAP_END - DESC_SWAP_START)));
+          opacity = 1 - t;
+          y = -t * 24;
+        }
+        descRef.current.style.opacity = opacity.toFixed(3);
+        descRef.current.style.transform = `translateY(${y.toFixed(2)}px)`;
+      }
+
+      // Second description: crossfades in over the first during the same swap window, then
+      // stays put — it's the one still visible once the transformation finishes.
+      if (desc2Ref.current) {
+        const t = easeOutCubic(clamp01((progress - DESC_SWAP_START) / (DESC_SWAP_END - DESC_SWAP_START)));
+        desc2Ref.current.style.opacity = t.toFixed(3);
+        desc2Ref.current.style.transform = `translateY(${((1 - t) * 24).toFixed(2)}px)`;
       }
 
       const iconsRange = ICONS_END - ICONS_START;
@@ -180,12 +214,17 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
     <Wrapper ref={containerRef}>
       <Inner>
         <LeftCol>
-          <Description ref={descRef}>
-            Todas as IAs do mercado ilimitadas, sem créditos e sem limite de uso
-          </Description>
+          <DescriptionStack>
+            <Description ref={descRef}>
+              Todas as IAs do mercado ilimitadas, sem créditos e sem limite de uso
+            </Description>
+            <DescriptionOverlay ref={desc2Ref}>
+              E com essas ferramentas você é capaz de fazer transformações como essa
+            </DescriptionOverlay>
+          </DescriptionStack>
           <IconRow>
             {ICONS.map((icon, i) => (
-              <IconWrap key={icon.alt} ref={(el) => (iconRefs.current[i] = el)}>
+              <IconWrap key={icon.alt} ref={(el) => (iconRefs.current[i] = el)} $background={icon.background}>
                 <IconImg src={icon.src} alt={icon.alt} />
                 <Shine $cycle={SHINE_CYCLE} $delay={i * (SHINE_CYCLE / ICONS.length)} />
               </IconWrap>

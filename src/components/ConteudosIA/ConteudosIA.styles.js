@@ -8,7 +8,6 @@ export const Wrapper = styled.section`
   position: absolute;
   inset: 0;
   overflow: hidden;
-  // background: #0d131a;
   background: #0d141a;
 `;
 
@@ -36,14 +35,31 @@ export const LeftCol = styled.div`
   }
 `;
 
+/* Holds the first Description in normal flow (so IconRow's margin-top still measures from it)
+   while DescriptionOverlay sits absolutely on top of it, at the same size/position, for the
+   crossfade between the two descriptions. */
+export const DescriptionStack = styled.div`
+  position: relative;
+`;
+
 export const Description = styled.p`
   color: #ffffff;
   font-family: ${({ theme }) => theme.fonts.heading};
   font-weight: 600;
   font-size: clamp(1.5rem, 2.6vw, 2.2rem);
   line-height: 1.35;
+  /* Balances line lengths across wraps (never splits a word — a whole word that doesn't fit
+     just moves entirely to the next line) instead of leaving a much shorter last line. */
+  text-wrap: balance;
   opacity: 0;
   will-change: opacity, transform;
+`;
+
+export const DescriptionOverlay = styled(Description)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 `;
 
 export const IconRow = styled.div`
@@ -59,13 +75,16 @@ const shineSweep = keyframes`
   100% { transform: translateX(120%); }
 `;
 
+/* Most icons sit on the shared neutral badge; a few (brand-accurate ones like Gemini/Claude/
+   Meta AI) pass their own $background gradient instead, matching their real app-icon look —
+   those also drop the neutral border, which would otherwise show up oddly against a color. */
 export const IconWrap = styled.div`
   position: relative;
   width: clamp(52px, 4.4vw, 68px);
   height: clamp(52px, 4.4vw, 68px);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ $background }) => $background || "rgba(255, 255, 255, 0.04)"};
+  border: 1px solid ${({ $background, theme }) => ($background ? "transparent" : theme.colors.border)};
   display: flex;
   align-items: center;
   justify-content: center;
