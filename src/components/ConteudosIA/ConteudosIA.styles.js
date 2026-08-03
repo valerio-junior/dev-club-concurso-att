@@ -8,7 +8,8 @@ export const Wrapper = styled.section`
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #0d131a;
+  // background: #0d131a;
+  background: #0d141a;
 `;
 
 export const Inner = styled.div`

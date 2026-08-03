@@ -42,8 +42,9 @@ const VIDEO_FADE_START = 0.34;
 const VIDEO_FADE_END = 0.42;
 const VIDEO_SCRUB_START = 0.42;
 const FOCUS_Y = 0.38;
-// Same safety net as the Hero: nudges any residual off-color background in the source clip
-// back toward this section's own background as the transformation progresses.
+// The regenerated clip's own background now already matches #0d131a (fixed at the source via
+// a flat-background reference photo), so this is back to a light safety net for any minor
+// residual drift, same as the Hero's version — not compensating for a real mismatch anymore.
 const BACKGROUND_CRUSH_MIN = 0.05;
 const BACKGROUND_CRUSH_MAX = 0.2;
 
