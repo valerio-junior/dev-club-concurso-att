@@ -1,0 +1,1 @@
+export { Formacoes } from "./Formacoes";
