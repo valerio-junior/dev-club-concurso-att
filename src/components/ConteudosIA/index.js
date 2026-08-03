@@ -1,0 +1,1 @@
+export { ConteudosIA } from "./ConteudosIA";

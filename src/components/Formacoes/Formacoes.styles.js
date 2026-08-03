@@ -1,9 +1,12 @@
 import styled from "styled-components";
 
+/* Absolutely positioned (not its own pinned flow element) — it's stacked, together with
+   ConteudosIA, inside a shared pinned Stage (see FormacoesConteudosIA) so the two can overlap
+   on screen: this section's tail (the last card exiting) plays concurrently with ConteudosIA's
+   opening reveal, instead of finishing completely before the next section starts. */
 export const Wrapper = styled.section`
-  position: relative;
-  width: 100%;
-  height: 100vh;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: ${({ theme }) => theme.colors.background};
 `;

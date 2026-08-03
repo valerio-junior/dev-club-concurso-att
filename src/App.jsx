@@ -5,8 +5,7 @@ import { useLenis } from "./hooks/useLenis";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Empresas } from "./components/Empresas";
-import { Formacoes } from "./components/Formacoes";
-// import { ConteudosIA } from "./components/ConteudosIA";
+import { FormacoesConteudosIA } from "./components/FormacoesConteudosIA";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -20,8 +19,7 @@ function App() {
       <main>
         <Hero />
         <Empresas />
-        <Formacoes />
-        {/* <ConteudosIA /> */}
+        <FormacoesConteudosIA />
       </main>
     </ThemeProvider>
   );

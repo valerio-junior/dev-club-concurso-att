@@ -19,6 +19,7 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
   const [primaryReady, setPrimaryReady] = useState(false);
   const [coarseReady, setCoarseReady] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
   const framesRef = useRef([]);
   const coarseFramesRef = useRef([]);
 
@@ -32,6 +33,7 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
     setPrimaryReady(false);
     setCoarseReady(false);
     setLoadingProgress(0);
+    setDuration(0);
 
     const video = document.createElement("video");
     video.src = src;
@@ -78,6 +80,7 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const duration = video.duration;
+      setDuration(duration);
 
       // priorityIndex is a fine-array index; translate it to the equivalent ratio so the
       // coarse pass can grab the same pose first too.
@@ -124,5 +127,5 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
     };
   }, [src, frameCount, priorityIndex, coarseCount]);
 
-  return { frames: framesRef, coarseFrames: coarseFramesRef, ready, primaryReady, coarseReady, loadingProgress };
+  return { frames: framesRef, coarseFrames: coarseFramesRef, ready, primaryReady, coarseReady, loadingProgress, duration };
 }

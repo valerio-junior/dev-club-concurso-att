@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useStickyScrub } from "../../hooks/useStickyScrub";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 import { ScrollTrigger } from "../../lib/gsap";
 import { theme } from "../../styles/theme";
 import {
@@ -79,7 +78,7 @@ const TABLET_BREAKPOINT_PX = parseInt(theme.breakpoints.tablet, 10);
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-export function Formacoes() {
+export const Formacoes = forwardRef(function Formacoes(_props, ref) {
   const containerRef = useRef(null);
   const beltLayerRef = useRef(null);
   const textColRef = useRef(null);
@@ -87,7 +86,7 @@ export function Formacoes() {
   const cardRefs = useRef([]);
   const beltDistanceRef = useRef(1600);
   const riseDistanceRef = useRef(500);
-  const scrollProgressRef = useRef(0);
+  const progressRef = useRef(0);
   // Progress (0..1) at which each card's row position lines up with where card 0 started —
   // i.e. when it "arrives" in view. Measured from real layout, not guessed.
   const arrivalProgressRef = useRef(FORMACOES.map(() => 0));
@@ -191,11 +190,22 @@ export function Formacoes() {
     });
   }, []);
 
-  useStickyScrub(containerRef, { distance: 4.2, onUpdate: render, progressRef: scrollProgressRef });
+  // Progress now arrives imperatively from FormacoesConteudosIA (the shared pinned Stage that
+  // hosts this section and ConteudosIA together, letting the two overlap) instead of this
+  // section pinning itself — see that component for the combined scroll choreography.
+  const renderAtProgress = useCallback(
+    (progress) => {
+      progressRef.current = progress;
+      render(progress);
+    },
+    [render]
+  );
+
+  useImperativeHandle(ref, () => ({ render: renderAtProgress }), [renderAtProgress]);
 
   useEffect(() => {
     measure();
-    render(scrollProgressRef.current);
+    render(progressRef.current);
 
     // Other sections (their own pin-spacers, videos loading, etc.) can still change the
     // page's total layout after this section's own initial measurement — window "load" and
@@ -204,7 +214,7 @@ export function Formacoes() {
     // height), which is exactly when this section's cached measurements can go stale.
     const refresh = () => {
       measure();
-      render(scrollProgressRef.current);
+      render(progressRef.current);
     };
     window.addEventListener("load", refresh);
     window.addEventListener("resize", refresh);
@@ -245,4 +255,4 @@ export function Formacoes() {
       </BeltLayer>
     </Wrapper>
   );
-}
+});
