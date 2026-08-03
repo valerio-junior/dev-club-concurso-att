@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useStickyScrub } from "../../hooks/useStickyScrub";
 import { useVideoFrames } from "../../hooks/useVideoFrames";
 import { drawImageCover } from "../../lib/canvas";
+import { ScrollTrigger } from "../../lib/gsap";
 import {
   Wrapper,
   TextColumn,
@@ -135,7 +136,14 @@ export function Empresas() {
   useEffect(() => {
     measureRiseDistances();
     window.addEventListener("resize", measureRiseDistances);
-    return () => window.removeEventListener("resize", measureRiseDistances);
+    // Sibling sections added later (their pin-spacers, videos, etc.) can shift overall page
+    // layout after this section's own initial measurement — GSAP's "refresh" event fires
+    // whenever ScrollTrigger recalculates anything, which is the general signal to re-measure.
+    ScrollTrigger.addEventListener("refresh", measureRiseDistances);
+    return () => {
+      window.removeEventListener("resize", measureRiseDistances);
+      ScrollTrigger.removeEventListener("refresh", measureRiseDistances);
+    };
   }, [measureRiseDistances]);
 
   const render = useCallback(

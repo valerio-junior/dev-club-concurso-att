@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
+import { gsap } from "../../lib/gsap";
 import { useStickyScrub } from "../../hooks/useStickyScrub";
 import { useVideoFrames } from "../../hooks/useVideoFrames";
 import { drawImageCover, computeMotionCurve, curveIndexAt } from "../../lib/canvas";
@@ -63,6 +64,12 @@ export function Hero() {
   const positionsRef = useRef({ centerX: 0, rightX: 0 });
   const motionCurveRef = useRef(null);
   const scrollProgressRef = useRef(0);
+  // Blends the canvas frame from the fixed resting pose toward the curve-correct one once the
+  // motion curve is ready, instead of snapping straight to it — the snap is only invisible when
+  // the curve finishes near-instantly (the normal case); if it's ever delayed (slow network,
+  // device under load), this keeps the correction a short glide instead of a visible jump.
+  const catchupBlendRef = useRef(1);
+  const catchupDoneRef = useRef(false);
 
   const words = useMemo(() => HEADING_TEXT.split(" "), []);
 
@@ -139,9 +146,13 @@ export function Hero() {
       const list = usingFine ? frames.current : coarseFrames.current;
 
       if (canvas && list.length) {
+        const restingFloatIndex = Math.round(RAW_START_RATIO * (list.length - 1));
+        // While the curve isn't ready yet, blend is pinned at its initial value (1, but curve
+        // is null so this branch is skipped entirely — see the plain resting fallback below).
+        // Once ready, blend starts at 0 (still resting) and glides to 1 (fully curve-correct).
         const floatIndex = curve
-          ? targetRawRatio(curve, eased) * (list.length - 1)
-          : Math.round(RAW_START_RATIO * (list.length - 1));
+          ? restingFloatIndex + (targetRawRatio(curve, eased) * (list.length - 1) - restingFloatIndex) * catchupBlendRef.current
+          : restingFloatIndex;
 
         // Cross-fading between neighbors only looks good when they're close in pose, which
         // is only guaranteed with the dense 60-frame set — the sparse 16-frame coarse set has
@@ -204,12 +215,24 @@ export function Hero() {
     }
   }, [primaryReady, render, measurePositions]);
 
-  // Once the (only, permanent) motion curve is ready, re-paint at the current scroll position
-  // so correctly-paced scrubbing takes effect immediately instead of waiting for the next tick.
+  // Once the (only, permanent) motion curve is ready, glide from the resting pose to the
+  // curve-correct one instead of snapping there in a single frame — see catchupBlendRef above.
+  // Guarded to run only once: this effect can re-fire later when `render` changes identity
+  // (e.g. once the fine frames finish loading), and re-running the glide at that point would
+  // introduce a second, unwanted jump/glide of its own.
   useEffect(() => {
-    if (coarseReady) {
-      render(scrollProgressRef.current);
+    if (coarseReady && !catchupDoneRef.current) {
+      catchupDoneRef.current = true;
+      catchupBlendRef.current = 0;
+      const tween = gsap.to(catchupBlendRef, {
+        current: 1,
+        duration: 0.6,
+        ease: "power2.out",
+        onUpdate: () => render(scrollProgressRef.current),
+      });
+      return () => tween.kill();
     }
+    return undefined;
   }, [coarseReady, render]);
 
   // Once the fine frames are fully loaded, re-paint again — refines to full visual smoothness

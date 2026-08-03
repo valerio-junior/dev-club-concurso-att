@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useStickyScrub } from "../../hooks/useStickyScrub";
+import { ScrollTrigger } from "../../lib/gsap";
 import { theme } from "../../styles/theme";
 import {
   Wrapper,
@@ -9,6 +10,7 @@ import {
   CardsRow,
   Card,
   IconRow,
+  IconBadge,
   CardIcon,
   CardTitle,
   CardDescription,
@@ -112,6 +114,18 @@ export function Formacoes() {
       cardsRow.style.marginLeft = `${marginLeft}px`;
     }
 
+    // Match every card's height to the first one's natural height — descriptions vary in
+    // length, so left alone the shorter cards end up visually smaller than card 0. Reset to
+    // auto first so the measurement reflects real content, not a stale height from a
+    // previous pass (e.g. after a resize).
+    cardRefs.current.forEach((el) => {
+      if (el) el.style.height = "";
+    });
+    const cardHeight = firstCard.getBoundingClientRect().height;
+    cardRefs.current.forEach((el) => {
+      if (el) el.style.height = `${cardHeight}px`;
+    });
+
     // How far below the viewport a card must start to genuinely rise from off-screen — all
     // cards share the same resting Y (a single row), so one measurement covers all of them.
     // Measured relative to the *section's own container*, not the live viewport: at page
@@ -177,24 +191,28 @@ export function Formacoes() {
     });
   }, []);
 
-  useStickyScrub(containerRef, { distance: 3.3, onUpdate: render, progressRef: scrollProgressRef });
+  useStickyScrub(containerRef, { distance: 4.2, onUpdate: render, progressRef: scrollProgressRef });
 
   useEffect(() => {
     measure();
     render(scrollProgressRef.current);
 
-    // Other sections above this one (Hero/Empresas videos, etc.) can still be resizing their
-    // own pinned heights shortly after mount — a re-measure once everything has settled
-    // catches any of that instead of only trusting the very first, possibly-early pass.
+    // Other sections (their own pin-spacers, videos loading, etc.) can still change the
+    // page's total layout after this section's own initial measurement — window "load" and
+    // "resize" don't cover all of that, but GSAP's own "refresh" event fires every time
+    // ScrollTrigger recalculates anything (e.g. a sibling section's pin-spacer changing
+    // height), which is exactly when this section's cached measurements can go stale.
     const refresh = () => {
       measure();
       render(scrollProgressRef.current);
     };
     window.addEventListener("load", refresh);
     window.addEventListener("resize", refresh);
+    ScrollTrigger.addEventListener("refresh", refresh);
     return () => {
       window.removeEventListener("load", refresh);
       window.removeEventListener("resize", refresh);
+      ScrollTrigger.removeEventListener("refresh", refresh);
     };
   }, [measure, render]);
 
@@ -214,7 +232,9 @@ export function Formacoes() {
             <Card key={item.title} ref={(el) => (cardRefs.current[i] = el)}>
               <IconRow>
                 {item.icons.map((icon) => (
-                  <CardIcon key={icon.alt} src={icon.src} alt={icon.alt} />
+                  <IconBadge key={icon.alt}>
+                    <CardIcon src={icon.src} alt={icon.alt} />
+                  </IconBadge>
                 ))}
               </IconRow>
               <CardTitle>{item.title}</CardTitle>

@@ -57,14 +57,14 @@ export const CardsRow = styled.div`
 export const Card = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   width: 400px;
   flex-shrink: 0;
   padding: 2.25rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.blueLight};
-  border-radius: 14px;
-  box-shadow: 0 16px 36px rgba(96, 165, 250, 0.14);
+  background: #0d0f14;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
   opacity: 0;
   will-change: opacity, transform;
 
@@ -79,9 +79,23 @@ export const IconRow = styled.div`
   gap: 0.75rem;
 `;
 
+/* A quiet badge behind each logo instead of a bare, flat SVG floating on the card —
+   reads as considered/designed rather than a raw icon dump. */
+export const IconBadge = styled.div`
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 50%;
+`;
+
 export const CardIcon = styled.img`
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
   object-fit: contain;
 `;
 
@@ -90,11 +104,12 @@ export const CardTitle = styled.h3`
   font-family: ${({ theme }) => theme.fonts.heading};
   font-weight: 700;
   font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  line-height: 1.3;
 `;
 
 export const CardDescription = styled.p`
-  color: ${({ theme }) => theme.colors.textMuted};
+  color: rgba(245, 245, 245, 0.62);
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: clamp(0.95rem, 1.2vw, 1.05rem);
-  line-height: 1.55;
+  line-height: 1.6;
 `;
