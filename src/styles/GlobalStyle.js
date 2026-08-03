@@ -16,7 +16,11 @@ export const GlobalStyle = createGlobalStyle`
     overflow-x: hidden;
   }
 
-  #root {
+  /* Scoped to main (not #root) so the Header — a sibling of main, not a descendant — stays
+     outside this perspective's containing-block effect and its position: fixed keeps working
+     against the real viewport. See src/lib/gsap.js for why perspective breaks position: fixed
+     for any descendant. */
+  main {
     perspective: 1500px;
     perspective-origin: 50% 50%;
   }
