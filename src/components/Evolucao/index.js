@@ -1,0 +1,1 @@
+export { Evolucao } from "./Evolucao";

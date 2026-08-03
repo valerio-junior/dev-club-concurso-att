@@ -27,7 +27,13 @@ const FRAME_COUNT = 64;
 // had time to settle onto the keyboard — estimated, not measured from an actual frame (may
 // need a calibration pass once seen). Pushed further out than the lid-open point itself so
 // logos don't start while the hands are still mid-air moving down to the keys.
-const OPEN_THRESHOLD = 0.78;
+// NOTE: this fraction maps directly to a raw video frame (floatIndex = progress * frameCount)
+// regardless of `distance` — distance only changes how much physical scrolling a given
+// progress fraction takes, never which video frame it shows. So this must NOT be rescaled
+// when distance changes (an earlier attempt to do that made logos start before the lid had
+// actually finished opening in the video). 0.8 instead of the original 0.78 adds a touch more
+// buffer, per request, on top of fixing that regression.
+const OPEN_THRESHOLD = 0.8;
 const SCREEN_FADE_IN = 0.08; // how much extra progress the screen itself takes to fade in after that
 
 const LOGOS = [
@@ -41,11 +47,14 @@ const LOGOS = [
 // the next one — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequential within the range
 // left after OPEN_THRESHOLD. The last entry's holdEnd/fadeOutEnd are overridden to Infinity
 // at render time (see the isLast check below), so it stays instead of fading out.
+// Widened to fill [OPEN_THRESHOLD, 1] (now 0.2 wide instead of the original 0.22 — narrower
+// fraction, but distance grew from 3.6 to 4.39, so the *absolute* scroll for this whole phase
+// still ends up larger than before) — same shape/order per logo, just more room per hold.
 const LOGO_WINDOWS = [
-  [0.78, 0.8, 0.825, 0.835],
-  [0.835, 0.855, 0.88, 0.89],
-  [0.89, 0.91, 0.935, 0.945],
-  [0.945, 0.965, 0.99, 1],
+  [0.8, 0.818, 0.841, 0.85],
+  [0.85, 0.868, 0.891, 0.9],
+  [0.9, 0.918, 0.941, 0.95],
+  [0.95, 0.968, 0.991, 1],
 ];
 
 const EYEBROW_TEXT = "Mercado aquecido e você preparado";
@@ -57,16 +66,18 @@ const CARDS = [
 ];
 
 // Title (+ eyebrow) doesn't move — it just fades in slowly, in place — so it only needs
-// [fadeInStart, fadeInEnd]; once in, it stays.
-const TITLE_WINDOW = [0, 0.14];
+// [fadeInStart, fadeInEnd]; once in, it stays. Rescaled (same 0.82 factor as OPEN_THRESHOLD)
+// to keep its absolute scroll timing identical after distance grew — see OPEN_THRESHOLD above.
+const TITLE_WINDOW = [0, 0.115];
 
 // Cards: [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd] in scroll-progress (0..1) —
 // sequential, one fully gone before the next starts appearing. Fade-in windows are
 // intentionally short (fast) now that easing does the work of making the rise feel smooth.
+// Rescaled along with TITLE_WINDOW/OPEN_THRESHOLD — same absolute scroll timing as before.
 const CARD_WINDOWS = [
-  [0.14, 0.24, 0.38, 0.43],
-  [0.43, 0.53, 0.67, 0.72],
-  [0.72, 0.82, 0.96, 1],
+  [0.115, 0.197, 0.312, 0.353],
+  [0.353, 0.435, 0.549, 0.59],
+  [0.59, 0.672, 0.787, 0.82],
 ];
 
 // Cards: opacity ramps to 1 within this fraction of the fade-in window — kept under 1 so
@@ -221,7 +232,10 @@ export function Empresas() {
     [frames]
   );
 
-  useStickyScrub(containerRef, { distance: 3.6, onUpdate: render });
+  // Grew from 3.6 to 4.39 solely to give the logo phase more absolute scroll room — every
+  // other window above was rescaled by the same 3.6/4.39 factor so its absolute scroll timing
+  // (when the lid finishes opening, when each card enters/exits) stays exactly as it was.
+  useStickyScrub(containerRef, { distance: 4.39, onUpdate: render });
 
   useEffect(() => {
     if (primaryReady) {
