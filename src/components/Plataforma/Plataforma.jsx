@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
 import {
   Wrapper,
   Inner,
@@ -22,9 +22,11 @@ const CARDS = [
   "Conteúdos exclusivos e atualizados toda semana",
 ];
 
-// Vertical distance (px) between each card's resting slot — used both to position them via JS
-// and matches CardsStack's own height in the styles file (3 gaps + 1 card height).
-const CARD_SLOT = 110;
+// Fallback vertical distance (px) between each card's resting slot, used only until the real
+// slot spacing is measured from the rendered layout (CardsStack/CardItem heights are now
+// responsive `vh` clamps in the styles file, so a hardcoded px value would overflow on short
+// viewports — this mirrors the "measure real layout" approach used in ModuloBonus).
+const CARD_SLOT_FALLBACK = 110;
 
 // Text/image keep their exact same absolute scroll timing (0/28vh/59.5vh) as before — only the
 // cards' stacking/unstacking got roughly double the scroll room (entrance ~120vh->240vh,
@@ -57,7 +59,25 @@ const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 export const Plataforma = forwardRef(function Plataforma(_props, ref) {
   const descRef = useRef(null);
   const stageRef = useRef(null);
+  const cardsStackRef = useRef(null);
   const cardRefs = useRef([]);
+  const slotRef = useRef(CARD_SLOT_FALLBACK);
+
+  // Slot spacing = (stack height - one card's own height) / (n - 1), so the last card's bottom
+  // edge lands exactly at the stack's bottom edge — measured from the real rendered sizes
+  // instead of assuming a fixed px value, since both are now responsive `vh` clamps.
+  useEffect(() => {
+    const measure = () => {
+      const stackHeight = cardsStackRef.current?.offsetHeight;
+      const cardHeight = cardRefs.current[0]?.offsetHeight;
+      if (stackHeight && cardHeight && CARDS.length > 1) {
+        slotRef.current = (stackHeight - cardHeight) / (CARDS.length - 1);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   const render = useCallback((progress) => {
     if (descRef.current) {
@@ -106,7 +126,7 @@ export const Plataforma = forwardRef(function Plataforma(_props, ref) {
         opacity = 1 - fadeT;
       }
 
-      el.style.transform = `translateY(${(slot * CARD_SLOT).toFixed(1)}px)`;
+      el.style.transform = `translateY(${(slot * slotRef.current).toFixed(1)}px)`;
       el.style.opacity = opacity.toFixed(3);
     });
   }, []);
@@ -118,7 +138,7 @@ export const Plataforma = forwardRef(function Plataforma(_props, ref) {
       <Inner>
         <LeftCol>
           <Description ref={descRef}>Plataforma de trilha do básico ao avançado</Description>
-          <CardsStack>
+          <CardsStack ref={cardsStackRef}>
             {CARDS.map((text, i) => (
               <CardItem key={text} ref={(el) => (cardRefs.current[i] = el)} style={{ zIndex: i + 1 }}>
                 <CardText>{text}</CardText>

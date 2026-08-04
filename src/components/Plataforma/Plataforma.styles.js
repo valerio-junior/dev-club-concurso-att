@@ -84,7 +84,7 @@ export const PlatformImage = styled.img`
 export const CardsStack = styled.div`
   position: relative;
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
-  height: 422px;
+  height: clamp(280px, 44vh, 422px);
 `;
 
 export const CardItem = styled.div`
@@ -92,10 +92,10 @@ export const CardItem = styled.div`
   top: 0;
   left: 0;
   width: 100%;
-  min-height: 92px;
+  min-height: clamp(64px, 9vh, 92px);
   display: flex;
   align-items: center;
-  padding: 1.1rem 1.4rem;
+  padding: clamp(0.75rem, 1.6vh, 1.1rem) 1.4rem;
   background: #0d0f14;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-left: 3px solid ${({ theme }) => theme.colors.blueLight};
