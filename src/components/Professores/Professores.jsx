@@ -18,6 +18,7 @@ import {
   Node,
   TeacherBadge,
   IconBadge,
+  EnergyDot,
 } from "./Professores.styles";
 
 const BRAIN_SRC = "/assets/generated/professores-cerebro-transparente.png";
@@ -60,9 +61,16 @@ const OUTER_RADIUS_RATIO = 0.47;
 
 // Every node — teacher or icon — connects to the brain with its own straight, direct line
 // (no routing through anyone else), matching the reference: a clean radial web, not a tangle.
-// Only the icon wires carry energy particles, though — slow, unhurried loops (each offset by
-// its own phase) so they read as a calm, ongoing stream rather than something rushing past.
-const INBOUND_DURATION = 7;
+// Only the icon wires carry energy particles, though — a brisk flight once released.
+const INBOUND_DURATION = 2.4;
+
+// Icons release in small staggered bursts (2, then 1, then 1, then 2, ...) instead of an
+// evenly-spaced continuous stream, so arrivals read as distinct little waves rather than
+// everything moving constantly at once. Must sum to ICONS.length (13).
+const RELEASE_GROUPS = [2, 1, 1, 2, 1, 2, 1, 1, 2];
+const GROUP_GAP = 0.6; // seconds between the start of each burst
+const RELEASE_OFFSETS = RELEASE_GROUPS.flatMap((count, groupIndex) => Array(count).fill(groupIndex * GROUP_GAP));
+const CYCLE_LENGTH = RELEASE_GROUPS.length * GROUP_GAP;
 
 // A handful of varied "energy" colors cycled across the wires instead of one flat color, so
 // the whole network reads as richer/more alive.
@@ -142,12 +150,20 @@ export function Professores() {
       const t = time / 1000;
       let arrivalEnergy = 0;
 
-      // Every icon's own energy travels straight to the brain along its own direct line,
-      // continuously looping with a per-icon phase offset so they don't move in unison.
+      // Every icon's own energy travels straight to the brain along its own direct line, but
+      // only during its own release window (see RELEASE_OFFSETS) — outside of that window it's
+      // just idle and invisible, waiting for its next burst to come around.
       outerPositions.forEach((pos, i) => {
         const el = inboundParticleRefs.current[i];
-        const phase = (t / INBOUND_DURATION + i / outerPositions.length) % 1;
-        const travel = 1 - phase; // 1 -> 0: starts at the icon, arrives at the brain
+        const localT = ((t - RELEASE_OFFSETS[i]) % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH;
+        const traveling = localT < INBOUND_DURATION;
+        if (!traveling) {
+          if (el) el.style.opacity = "0";
+          return;
+        }
+
+        const progress = localT / INBOUND_DURATION; // 0 -> 1 across the flight
+        const travel = 1 - progress; // 1 -> 0: starts at the icon, arrives at the brain
         if (travel < 0.12) arrivalEnergy = Math.max(arrivalEnergy, 1 - travel / 0.12);
         if (!el) return;
         const x = center + (pos.x - center) * travel;
@@ -157,9 +173,12 @@ export function Professores() {
         // impossible for it to drift off that line.
         el.setAttribute("cx", x.toFixed(1));
         el.setAttribute("cy", y.toFixed(1));
-        // Fades out over the final stretch of the approach, right as it reaches the core —
-        // reads as the energy actually being absorbed into the brain, not just stopping.
-        el.style.opacity = phase > 0.9 ? (1 - (phase - 0.9) / 0.1).toFixed(2) : "1";
+        // Fades in right as it's released and fades out over the final stretch of the
+        // approach, right as it reaches the core — reads as being absorbed, not just stopping.
+        let opacity = 1;
+        if (progress < 0.08) opacity = progress / 0.08;
+        else if (progress > 0.85) opacity = 1 - (progress - 0.85) / 0.15;
+        el.style.opacity = opacity.toFixed(2);
       });
 
       // The brain's core glow brightens as energy arrives and eases back down otherwise —
@@ -219,12 +238,13 @@ export function Professores() {
               {outerPositions.map((_, i) => {
                 const color = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
                 return (
-                  <circle
+                  <EnergyDot
                     key={`inbound-${i}`}
                     ref={(el) => (inboundParticleRefs.current[i] = el)}
                     r="4"
                     fill={color}
-                    style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+                    style={{ color }}
+                    $delay={(i % PARTICLE_COLORS.length) * 0.15}
                   />
                 );
               })}

@@ -140,6 +140,20 @@ export const LinesSvg = styled.svg`
   pointer-events: none;
 `;
 
+const dotPulse = keyframes`
+  0%, 100% { transform: scale(0.8); filter: drop-shadow(0 0 3px currentColor); }
+  50% { transform: scale(1.5); filter: drop-shadow(0 0 9px currentColor); }
+`;
+
+/* Position (cx/cy) is driven per-frame from JS — this only handles the pulsing
+   glow/size on top of that, staggered per dot via $delay so they don't all throb in unison. */
+export const EnergyDot = styled.circle`
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ${dotPulse} 1s ease-in-out infinite;
+  animation-delay: ${({ $delay }) => $delay}s;
+`;
+
 const pulse = keyframes`
   0%, 100% {
     transform: translate(-50%, -50%) scale(1);
