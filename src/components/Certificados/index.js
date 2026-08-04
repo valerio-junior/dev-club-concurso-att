@@ -1,0 +1,1 @@
+export { Certificados } from "./Certificados";

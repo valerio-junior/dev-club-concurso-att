@@ -10,6 +10,8 @@ import { Evolucao } from "./components/Evolucao";
 import { PlataformaProjetos } from "./components/PlataformaProjetos";
 import { Depoimentos } from "./components/Depoimentos";
 import { Professores } from "./components/Professores";
+import { ModuloBonus } from "./components/ModuloBonus";
+import { Certificados } from "./components/Certificados";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -28,6 +30,8 @@ function App() {
         <PlataformaProjetos />
         <Depoimentos />
         <Professores />
+        <ModuloBonus />
+        <Certificados />
       </main>
     </ThemeProvider>
   );

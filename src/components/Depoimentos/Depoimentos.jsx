@@ -44,7 +44,7 @@ const TESTIMONIALS = [
     role: "Desenvolvedor Back-end no ",
     company: "Facebook",
     quote:
-      '"Consegui aplicar no meu trabalho atual tudo o que aprendi e logo fui promovida. A qualidade das aulas e o foco em UI/UX moderno me destacaram de todos os outros candidatos."',
+      '"Consegui aplicar no meu trabalho atual tudo o que aprendi e logo fui promovido. A qualidade das aulas e o foco em UI/UX moderno me destacaram de todos os outros candidatos."',
     youtubeId: "Ke90Tje7VS0",
     startTime: 3,
     endTime: 14,
@@ -55,7 +55,7 @@ const TESTIMONIALS = [
     role: "Desenvolvedor Full Stack Jr na ",
     company: "Amazon",
     quote:
-      '"O suporte durante o curso e o network que criei foram sensacionais. A sensação de ver meus projetos rodando em produção e recebendo elogios nas entrevistas não tem preço."',
+      '"O suporte durante o curso e o networking que criei foram sensacionais. A sensação de ver meus projetos rodando em produção e recebendo elogios nas entrevistas não tem preço."',
     youtubeId: "fTcWRLv56Xc",
     startTime: 4,
     endTime: 15,

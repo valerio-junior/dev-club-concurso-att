@@ -25,7 +25,7 @@ const BRAIN_SRC = "/assets/generated/professores-cerebro-transparente.png";
 
 const CHECKLIST = [
   "Melhor didática do mercado e conteúdos exclusivos",
-  "Recrutadora de auxiliando frente a frente",
+  "Recrutadora te auxiliando frente a frente",
   "Profissional e perita em Inteligência Artificial",
   "Profissional fullstack te auxiliando da construção ao deploy",
 ];
