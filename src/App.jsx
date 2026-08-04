@@ -13,6 +13,7 @@ import { Professores } from "./components/Professores";
 import { ModuloBonus } from "./components/ModuloBonus";
 import { Certificados } from "./components/Certificados";
 import { SalariosDev } from "./components/SalariosDev";
+import { Garantia } from "./components/Garantia";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -34,6 +35,7 @@ function App() {
         <ModuloBonus />
         <Certificados />
         <SalariosDev />
+        <Garantia />
       </main>
     </ThemeProvider>
   );

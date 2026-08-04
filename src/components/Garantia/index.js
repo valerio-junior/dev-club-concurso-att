@@ -1,0 +1,1 @@
+export { Garantia } from "./Garantia";
