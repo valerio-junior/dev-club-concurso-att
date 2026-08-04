@@ -5,12 +5,17 @@ import { Projetos } from "../Projetos/Projetos";
 import { Stage, Layer, ClosingFrame } from "./PlataformaProjetos.styles";
 
 // Plataforma keeps its own exact scroll timing (unchanged from before) — it just now gets that
-// same absolute scroll length (4.4 viewport heights) carved out of a bigger combined distance,
-// with a dedicated phase appended afterward for the window-close exit into Projetos.
+// same absolute scroll length carved out of a bigger combined distance, followed by the
+// window-close phase, followed by Projetos' own title + spinning-ring sequence.
 const PLATAFORMA_DISTANCE = 4.4;
 const CLOSE_DISTANCE = 2.2;
-const COMBINED_DISTANCE = PLATAFORMA_DISTANCE + CLOSE_DISTANCE;
-const PLATAFORMA_SHARE = PLATAFORMA_DISTANCE / COMBINED_DISTANCE;
+// Grew from 4 to 13 to give the projects' shared "snake" entrance path (see Projetos.jsx) enough
+// scroll room to read as slow and fluid instead of rushed.
+const PROJETOS_DISTANCE = 13;
+const COMBINED_DISTANCE = PLATAFORMA_DISTANCE + CLOSE_DISTANCE + PROJETOS_DISTANCE;
+
+const PLATAFORMA_END = PLATAFORMA_DISTANCE / COMBINED_DISTANCE;
+const CLOSE_END = (PLATAFORMA_DISTANCE + CLOSE_DISTANCE) / COMBINED_DISTANCE;
 
 // inset() percentages are relative to the frame's own box, so 50% on every side is the point
 // where top+bottom (and left+right) fully overlap — the visible window collapses to nothing
@@ -29,17 +34,21 @@ export function PlataformaProjetos() {
   const containerRef = useRef(null);
   const plataformaRef = useRef(null);
   const closingFrameRef = useRef(null);
+  const projetosRef = useRef(null);
 
   const render = useCallback((progress) => {
-    const plataformaProgress = clamp01(progress / PLATAFORMA_SHARE);
+    const plataformaProgress = clamp01(progress / PLATAFORMA_END);
     plataformaRef.current?.render(plataformaProgress);
 
-    const closeT = easeInOutCubic(clamp01((progress - PLATAFORMA_SHARE) / (1 - PLATAFORMA_SHARE)));
+    const closeT = easeInOutCubic(clamp01((progress - PLATAFORMA_END) / (CLOSE_END - PLATAFORMA_END)));
     if (closingFrameRef.current) {
       const inset = (closeT * MAX_INSET).toFixed(2);
       const radius = (closeT * MAX_RADIUS).toFixed(1);
       closingFrameRef.current.style.clipPath = `inset(${inset}% ${inset}% ${inset}% ${inset}% round ${radius}px)`;
     }
+
+    const projetosProgress = clamp01((progress - CLOSE_END) / (1 - CLOSE_END));
+    projetosRef.current?.render(projetosProgress);
   }, []);
 
   useStickyScrub(containerRef, { distance: COMBINED_DISTANCE, onUpdate: render });
@@ -47,7 +56,7 @@ export function PlataformaProjetos() {
   return (
     <Stage ref={containerRef}>
       <Layer style={{ zIndex: 1 }}>
-        <Projetos />
+        <Projetos ref={projetosRef} />
       </Layer>
       <ClosingFrame ref={closingFrameRef} style={{ zIndex: 2 }}>
         <Plataforma ref={plataformaRef} />
