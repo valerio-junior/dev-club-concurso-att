@@ -15,8 +15,10 @@ import {
   CardTitle,
   CardDescription,
   LaptopWrapper,
+  Connector,
   LaptopStage,
   LaptopImage,
+  LaptopVignette,
   WhatsAppScreen,
   WhatsAppHeader,
   ContactAvatar,
@@ -25,10 +27,14 @@ import {
   Bubble,
   BubbleText,
   BubbleMeta,
+  ComposeRow,
+  ComposeInput,
+  ComposeText,
+  SendButton,
 } from "./Evolucao.styles";
 import { useStickyScrub } from "../../hooks/useStickyScrub";
 
-const LAPTOP_SRC = "/assets/generated/evolucao-laptop.png";
+const LAPTOP_SRC = "/assets/generated/notebook-aberto.png";
 const CONTACT_NAME = "Valério";
 const MESSAGE = "Parabéns, vamos ficar com você para essa vaga!!";
 
@@ -64,12 +70,22 @@ const IconPlatform = () => (
   </svg>
 );
 
+const IconBriefcase = () => (
+  <svg viewBox="0 0 24 24">
+    <rect x="3" y="8" width="18" height="12" rx="2" />
+    <path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <path d="M3 13h18" />
+  </svg>
+);
+
 // Every coordinate here (node x/y, path d) shares one coordinate space (0..100 wide,
 // 0..VIEWBOX_H tall) with the SVG's viewBox, so the drawn line is guaranteed to pass exactly
 // through each node's center instead of just tracking near it. Tightened from 100-unit to
 // 70-unit gaps between stops (and Track's min-height scaled down to match) so less scroll is
 // needed between each one.
-const VIEWBOX_H = 320;
+// Tail past the last stop trimmed further (was leaving a big empty gap before the laptop) —
+// see the Connector element for how it bridges the rest of the way in.
+const VIEWBOX_H = 340;
 
 const STOPS = [
   {
@@ -110,11 +126,20 @@ const STOPS = [
     description: "Conteúdo estruturado, direto ao ponto, disponível quando e onde você quiser estudar — no seu ritmo.",
     Icon: IconPlatform,
   },
+  {
+    key: "calls-mercado",
+    side: "left",
+    x: 30,
+    y: 320,
+    title: "Calls voltada ao mercado de trabalho",
+    description: "Calls para te ajudar a construir seu linkedin e currículo para seu tão esperado sim chegar.",
+    Icon: IconBriefcase,
+  },
 ];
 
 // Starts dead-center (x 50) at the very top, then curves out to reach the first stop.
 const LINE_PATH =
-  "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180 C 30 205, 70 225, 70 250 C 70 275, 50 285, 50 300";
+  "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180 C 30 205, 70 225, 70 250 C 70 275, 30 295, 30 320 C 30 328, 50 330, 50 335";
 
 // The color swap + card reveal happen over a short window of overall progress right as the
 // drawn line reaches that stop's point along the path — not an instant snap, but quick enough
@@ -122,9 +147,15 @@ const LINE_PATH =
 const COLOR_WINDOW = 0.025;
 const CARD_WINDOW = 0.05;
 
-const TYPE_END = 0.85;
-const SENT_START = 0.85;
-const SENT_END = 1;
+// Laptop-block progress phases: connector draws in first, then the message types inside the
+// compose bar, then "sends" (compose clears, bubble takes over in the chat), then read ticks.
+const CONNECTOR_END = 0.1;
+const TYPE_START = 0.1;
+const TYPE_END = 0.7;
+const SEND_START = 0.7;
+const SEND_END = 0.8;
+const SENT_START = 0.8;
+const SENT_END = 0.9;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -150,12 +181,15 @@ export function Evolucao() {
   const cardRefs = useRef([]);
   const stopProgressRef = useRef(STOPS.map(() => 0));
   const laptopContainerRef = useRef(null);
+  const connectorRef = useRef(null);
+  const composeInputRef = useRef(null);
+  const composeTextRef = useRef(null);
   const bubbleRef = useRef(null);
   const charsRef = useRef([]);
   const ticksRef = useRef(null);
 
   useEffect(() => {
-    charsRef.current = bubbleRef.current ? Array.from(bubbleRef.current.querySelectorAll("[data-char]")) : [];
+    charsRef.current = composeTextRef.current ? Array.from(composeTextRef.current.querySelectorAll("[data-char]")) : [];
   }, []);
 
   const render = useCallback((progress) => {
@@ -216,6 +250,7 @@ export function Evolucao() {
       "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110",
       "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180",
       "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180 C 30 205, 70 225, 70 250",
+      "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180 C 30 205, 70 225, 70 250 C 70 275, 30 295, 30 320",
     ];
     stopProgressRef.current = cutPoints.map((d) => measureStopProgress(path, d));
 
@@ -233,12 +268,29 @@ export function Evolucao() {
   }, [render]);
 
   const renderLaptop = useCallback((progress) => {
+    // Connector draws in first, as a continuation of the Track's line, before anything else.
+    if (connectorRef.current) {
+      const connectorT = easeOutCubic(clamp01(progress / CONNECTOR_END));
+      connectorRef.current.style.transform = `scaleY(${connectorT.toFixed(3)})`;
+      connectorRef.current.style.opacity = connectorT > 0.02 ? "1" : "0";
+    }
+
+    // Message types letter-by-letter inside the compose bar.
     const chars = charsRef.current;
     const total = chars.length;
-    const visibleCount = Math.floor(clamp01(progress / TYPE_END) * total);
+    const typeT = clamp01((progress - TYPE_START) / (TYPE_END - TYPE_START));
+    const visibleCount = Math.floor(typeT * total);
     chars.forEach((el, i) => {
       el.style.opacity = i < visibleCount ? "1" : "0";
     });
+
+    // Then "sends": compose bar's text clears out while the real chat bubble takes over.
+    const sendT = easeOutCubic(clamp01((progress - SEND_START) / (SEND_END - SEND_START)));
+    if (composeInputRef.current) composeInputRef.current.style.opacity = (1 - sendT).toFixed(3);
+    if (bubbleRef.current) {
+      bubbleRef.current.style.opacity = sendT.toFixed(3);
+      bubbleRef.current.style.transform = `translateY(${(6 * (1 - sendT)).toFixed(2)}px) scale(${(0.94 + 0.06 * sendT).toFixed(3)})`;
+    }
 
     if (ticksRef.current) {
       const sentT = clamp01((progress - SENT_START) / (SENT_END - SENT_START));
@@ -284,8 +336,10 @@ export function Evolucao() {
       </Track>
 
       <LaptopWrapper ref={laptopContainerRef}>
+        <Connector ref={connectorRef} />
         <LaptopStage>
           <LaptopImage src={LAPTOP_SRC} alt="Notebook aberto com WhatsApp" />
+          <LaptopVignette />
           <WhatsAppScreen>
             <WhatsAppHeader>
               <ContactAvatar>V</ContactAvatar>
@@ -293,13 +347,7 @@ export function Evolucao() {
             </WhatsAppHeader>
             <ChatArea>
               <Bubble ref={bubbleRef}>
-                <BubbleText>
-                  {MESSAGE.split("").map((ch, i) => (
-                    <span key={i} data-char style={{ opacity: 0 }}>
-                      {ch}
-                    </span>
-                  ))}
-                </BubbleText>
+                <BubbleText>{MESSAGE}</BubbleText>
                 <BubbleMeta>
                   21:42
                   <svg ref={ticksRef} viewBox="0 0 16 11" fill="none">
@@ -314,6 +362,22 @@ export function Evolucao() {
                 </BubbleMeta>
               </Bubble>
             </ChatArea>
+            <ComposeRow>
+              <ComposeInput ref={composeInputRef}>
+                <ComposeText ref={composeTextRef}>
+                  {MESSAGE.split("").map((ch, i) => (
+                    <span key={i} data-char style={{ opacity: 0 }}>
+                      {ch}
+                    </span>
+                  ))}
+                </ComposeText>
+              </ComposeInput>
+              <SendButton>
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 12h16M14 6l6 6-6 6" />
+                </svg>
+              </SendButton>
+            </ComposeRow>
           </WhatsAppScreen>
         </LaptopStage>
       </LaptopWrapper>

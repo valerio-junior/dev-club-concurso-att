@@ -6,7 +6,7 @@ import styled, { keyframes } from "styled-components";
 export const Track = styled.section`
   position: relative;
   width: 100%;
-  min-height: 190vh;
+  min-height: 143vh;
   background: ${({ theme }) => theme.colors.background};
   padding: 4rem clamp(1.5rem, 6vw, 6rem) 0;
   overflow: hidden;
@@ -111,13 +111,13 @@ export const CardWrap = styled.div`
   position: absolute;
   top: 0;
   transform: translateY(-50%);
-  width: min(34%, 420px);
+  width: min(24%, 280px);
   opacity: 0;
   will-change: opacity, transform;
   ${({ $side }) => ($side === "left" ? "left: calc(30% + 6vw);" : "right: calc(30% + 6vw);")}
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    width: min(60vw, 320px);
+    width: min(48vw, 240px);
     ${({ $side }) => ($side === "left" ? "left: 30%;" : "right: 4%;")}
   }
 `;
@@ -125,8 +125,8 @@ export const CardWrap = styled.div`
 export const Card = styled.div`
   background: #0d0f14;
   border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 14px;
-  padding: 1.5rem 1.75rem;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
   box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
 `;
 
@@ -134,33 +134,60 @@ export const CardTitle = styled.h3`
   color: #ffffff;
   font-family: ${({ theme }) => theme.fonts.heading};
   font-weight: 700;
-  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
-  margin-bottom: 0.5rem;
+  font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+  margin-bottom: 0.3rem;
 `;
 
 export const CardDescription = styled.p`
   color: ${({ theme }) => theme.colors.textMuted};
   font-family: ${({ theme }) => theme.fonts.body};
-  font-size: clamp(0.9rem, 1.1vw, 1rem);
-  line-height: 1.55;
+  font-size: clamp(0.68rem, 0.85vw, 0.78rem);
+  line-height: 1.45;
 `;
 
 /* The one part of this section that pins — fixes in place once reached, and only releases
-   once the WhatsApp message has finished being typed and sent. */
+   once the WhatsApp message has finished being typed and sent. Laptop sits near the top (not
+   dead-center) so the connector line above it (bridging from where the Track's line ends) stays
+   short. */
 export const LaptopWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 6vh;
   background: ${({ theme }) => theme.colors.background};
 `;
 
+/* Bridges the visual gap between the Track's line ending and the laptop image, same glowing
+   style as the line itself. Starts fully collapsed (scaleY 0) and draws in — driven imperatively
+   from this section's own scrub progress (see renderLaptop in Evolucao.jsx) — instead of being
+   statically visible from the start, so it reads as the line continuing, not a separate static
+   piece that was already there. */
+export const Connector = styled.div`
+  width: 3px;
+  height: 9vh;
+  border-radius: 2px;
+  background: #60a5fa;
+  filter: drop-shadow(0 0 4px rgba(96, 165, 250, 1)) drop-shadow(0 0 12px rgba(76, 141, 246, 0.85));
+  transform-origin: top;
+  transform: scaleY(0);
+  opacity: 0;
+  will-change: transform, opacity;
+`;
+
+/* Back to the static notebook-aberto.png (black-bezel clip-art laptop) after the video
+   experiments didn't pan out — its own aspect ratio is ~1.2987 (900x693). Width capped three
+   ways: a viewport-width fraction, an absolute max, and a viewport-*height*-derived cap (via
+   that ratio) so the image's rendered height can never exceed the space actually available
+   inside the pinned 100vh wrapper (minus padding-top and the Connector above) — otherwise it'd
+   get clipped top/bottom by LaptopWrapper's overflow: hidden. */
 export const LaptopStage = styled.div`
   position: relative;
-  width: min(70vw, 1000px);
+  width: min(60vw, 900px, calc(78vh * 1.2987));
 `;
 
 export const LaptopImage = styled.img`
@@ -169,14 +196,23 @@ export const LaptopImage = styled.img`
   display: block;
 `;
 
-/* Positioned over the laptop image's screen area — measured against the generated
-   evolucao-laptop.png (frontal shot), may still need a small calibration pass once seen live. */
+/* Fades the image's edges into the page background, same technique used on the Hero/Empresas
+   videos, so it reads as part of the page instead of a hard-edged box. */
+export const LaptopVignette = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, ${({ theme }) => theme.colors.background} 100%);
+`;
+
+/* Positioned over notebook-aberto.png's screen area — the sizing that was already confirmed
+   good before the video detour. */
 export const WhatsAppScreen = styled.div`
   position: absolute;
-  top: 26.5%;
-  left: 34.7%;
-  width: 30.6%;
-  height: 36%;
+  top: 6.5%;
+  left: 15.5%;
+  width: 72%;
+  height: 55%;
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -226,6 +262,8 @@ export const ChatArea = styled.div`
   background-size: 14px 14px;
 `;
 
+/* Starts hidden — only appears once the message has finished being typed in ComposeInput and
+   "sent" (see the send-transition window in Evolucao.jsx). */
 export const Bubble = styled.div`
   align-self: flex-end;
   max-width: 82%;
@@ -235,6 +273,58 @@ export const Bubble = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  opacity: 0;
+  transform: translateY(6px) scale(0.94);
+  will-change: opacity, transform;
+`;
+
+/* The bottom compose row, where the message is typed letter-by-letter before "sending". */
+export const ComposeRow = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.3rem, 0.8vw, 0.5rem);
+  padding: clamp(0.3rem, 1vw, 0.55rem) clamp(0.4rem, 1.2vw, 0.7rem);
+  background: #202c33;
+`;
+
+export const ComposeInput = styled.div`
+  flex: 1;
+  min-height: clamp(1.1rem, 2.6vw, 1.8rem);
+  background: #2a3942;
+  border-radius: 999px;
+  padding: 0.3rem clamp(0.5rem, 1.3vw, 0.8rem);
+  display: flex;
+  align-items: center;
+`;
+
+export const ComposeText = styled.span`
+  color: #e9edef;
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: clamp(0.55rem, 1.1vw, 0.85rem);
+  line-height: 1.3;
+  white-space: pre-wrap;
+`;
+
+export const SendButton = styled.div`
+  flex-shrink: 0;
+  width: clamp(18px, 2.4vw, 28px);
+  height: clamp(18px, 2.4vw, 28px);
+  border-radius: 50%;
+  background: #00a884;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 52%;
+    height: 52%;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 `;
 
 export const BubbleText = styled.span`
