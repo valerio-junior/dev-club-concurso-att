@@ -13,12 +13,12 @@ export const Inner = styled.div`
   justify-content: space-between;
   gap: clamp(2rem, 5vw, 5rem);
   height: 100%;
-  padding: 0 clamp(1.5rem, 6vw, 6rem);
+  padding: clamp(7rem, 16vh, 10rem) clamp(1.5rem, 6vw, 6rem) 0;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     flex-direction: column;
     justify-content: center;
-    padding: 2rem 1.5rem;
+    padding: clamp(7rem, 16vh, 10rem) 1.5rem 1.5rem;
   }
 `;
 
