@@ -217,6 +217,8 @@ export const TeacherBadge = styled.div`
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(120, 180, 255, 0.25);
+  cursor: default;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
   img {
     width: 100%;
@@ -236,6 +238,8 @@ export const IconBadge = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid ${({ theme }) => theme.colors.border};
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  cursor: default;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
   img {
     width: 52%;
