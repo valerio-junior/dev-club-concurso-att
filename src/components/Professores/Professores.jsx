@@ -81,6 +81,12 @@ const PARTICLE_COLORS = ["#7ecbff", "#ffd166", "#ff9f5a", "#a78bfa", "#6ee7b7", 
 // rather than an on/off flicker.
 const CORE_DECAY = 0.95;
 
+// Continuous ambient orbiting — icons drift counter-clockwise ("left"), teacher photos drift
+// clockwise ("right"), opposite directions, both slow enough to read as ambient rather than
+// distracting. Degrees per second.
+const ICON_ROTATION_SPEED = 5;
+const TEACHER_ROTATION_SPEED = -5;
+
 function angleFor(i, count) {
   return (i / count) * 360 - 90;
 }
@@ -94,6 +100,10 @@ export function Professores() {
   const inboundParticleRefs = useRef([]);
   const coreRef = useRef(null);
   const coreEnergyRef = useRef(0);
+  const teacherNodeRefs = useRef([]);
+  const iconNodeRefs = useRef([]);
+  const teacherLineRefs = useRef([]);
+  const iconLineRefs = useRef([]);
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -150,10 +160,51 @@ export function Professores() {
       const t = time / 1000;
       let arrivalEnergy = 0;
 
-      // Every icon's own energy travels straight to the brain along its own direct line, but
-      // only during its own release window (see RELEASE_OFFSETS) — outside of that window it's
-      // just idle and invisible, waiting for its next burst to come around.
-      outerPositions.forEach((pos, i) => {
+      const iconRotation = (t * ICON_ROTATION_SPEED) % 360;
+      const teacherRotation = (t * TEACHER_ROTATION_SPEED) % 360;
+
+      // Teachers continuously orbit — each frame recomputes its live angle, then updates its
+      // own wire (line endpoint) and badge position to match, so the wire always stays
+      // attached to the photo instead of the photo drifting away from it.
+      TEACHERS.forEach((_, i) => {
+        const angleDeg = angleFor(i, TEACHERS.length) + teacherRotation;
+        const rad = (angleDeg * Math.PI) / 180;
+        const x = center + innerRadius * Math.cos(rad);
+        const y = center + innerRadius * Math.sin(rad);
+
+        const lineEl = teacherLineRefs.current[i];
+        if (lineEl) {
+          lineEl.setAttribute("x2", x.toFixed(1));
+          lineEl.setAttribute("y2", y.toFixed(1));
+        }
+        const nodeEl = teacherNodeRefs.current[i];
+        if (nodeEl) {
+          nodeEl.style.transform = `translate(-50%, -50%) translate(${(x - center).toFixed(1)}px, ${(y - center).toFixed(1)}px)`;
+        }
+      });
+
+      // Icons orbit the opposite direction, same idea for their own wire + badge — and their
+      // inbound energy particle rides this exact same live position, so it's always departing
+      // from wherever the icon currently is, not a stale starting point.
+      ICONS.forEach((_, i) => {
+        const angleDeg = angleFor(i, ICONS.length) + iconRotation;
+        const rad = (angleDeg * Math.PI) / 180;
+        const x = center + outerRadius * Math.cos(rad);
+        const y = center + outerRadius * Math.sin(rad);
+
+        const lineEl = iconLineRefs.current[i];
+        if (lineEl) {
+          lineEl.setAttribute("x2", x.toFixed(1));
+          lineEl.setAttribute("y2", y.toFixed(1));
+        }
+        const nodeEl = iconNodeRefs.current[i];
+        if (nodeEl) {
+          nodeEl.style.transform = `translate(-50%, -50%) translate(${(x - center).toFixed(1)}px, ${(y - center).toFixed(1)}px)`;
+        }
+
+        // Every icon's own energy travels straight to the brain along its own direct line,
+        // but only during its own release window (see RELEASE_OFFSETS) — outside of that
+        // window it's idle and invisible, waiting for its next burst to come around.
         const el = inboundParticleRefs.current[i];
         const localT = ((t - RELEASE_OFFSETS[i]) % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH;
         const traveling = localT < INBOUND_DURATION;
@@ -166,13 +217,13 @@ export function Professores() {
         const travel = 1 - progress; // 1 -> 0: starts at the icon, arrives at the brain
         if (travel < 0.12) arrivalEnergy = Math.max(arrivalEnergy, 1 - travel / 0.12);
         if (!el) return;
-        const x = center + (pos.x - center) * travel;
-        const y = center + (pos.y - center) * travel;
+        const px = center + (x - center) * travel;
+        const py = center + (y - center) * travel;
         // Set directly as SVG attributes (not a CSS transform on a separate HTML element) —
         // same coordinate space as the <line> it's supposed to be riding, so it's physically
         // impossible for it to drift off that line.
-        el.setAttribute("cx", x.toFixed(1));
-        el.setAttribute("cy", y.toFixed(1));
+        el.setAttribute("cx", px.toFixed(1));
+        el.setAttribute("cy", py.toFixed(1));
         // Fades in right as it's released and fades out over the final stretch of the
         // approach, right as it reaches the core — reads as being absorbed, not just stopping.
         let opacity = 1;
@@ -195,7 +246,7 @@ export function Professores() {
 
     raf = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(raf);
-  }, [visible, outerPositions, center]);
+  }, [visible, center, innerRadius, outerRadius]);
 
   return (
     <Wrapper ref={wrapperRef}>
@@ -220,17 +271,35 @@ export function Professores() {
 
         <RightCol>
           <Stage ref={stageRef} data-visible={visible}>
-            <OrbitRing $size={INNER_RADIUS_RATIO * 2 * 100 + 6} />
-            <OrbitRing $size={OUTER_RADIUS_RATIO * 2 * 100 + 4} />
+            <OrbitRing $size={38} />
+            <OrbitRing $size={66} />
 
             <LinesSvg viewBox={`0 0 ${size} ${size}`}>
               {innerPositions.map((pos, i) => (
-                <line key={`inner-line-${i}`} x1={center} y1={center} x2={pos.x} y2={pos.y} stroke="rgba(150,190,255,0.28)" strokeWidth="1" />
+                <line
+                  key={`inner-line-${i}`}
+                  ref={(el) => (teacherLineRefs.current[i] = el)}
+                  x1={center}
+                  y1={center}
+                  x2={pos.x}
+                  y2={pos.y}
+                  stroke="rgba(150,190,255,0.28)"
+                  strokeWidth="1"
+                />
               ))}
               {/* Every icon gets its own straight, direct line to the brain — same as the
                   teachers above, no routing through anyone else. */}
               {outerPositions.map((pos, i) => (
-                <line key={`outer-line-${i}`} x1={center} y1={center} x2={pos.x} y2={pos.y} stroke="rgba(150,190,255,0.16)" strokeWidth="1" />
+                <line
+                  key={`outer-line-${i}`}
+                  ref={(el) => (iconLineRefs.current[i] = el)}
+                  x1={center}
+                  y1={center}
+                  x2={pos.x}
+                  y2={pos.y}
+                  stroke="rgba(150,190,255,0.16)"
+                  strokeWidth="1"
+                />
               ))}
 
               {/* Riding the exact same coordinate space as the lines above, instead of a
@@ -256,6 +325,7 @@ export function Professores() {
             {TEACHERS.map((teacher, i) => (
               <Node
                 key={teacher.id}
+                ref={(el) => (teacherNodeRefs.current[i] = el)}
                 style={{ transform: `translate(-50%, -50%) translate(${innerPositions[i].x - center}px, ${innerPositions[i].y - center}px)` }}
               >
                 <TeacherBadge>
@@ -267,6 +337,7 @@ export function Professores() {
             {ICONS.map((icon, i) => (
               <Node
                 key={icon.id}
+                ref={(el) => (iconNodeRefs.current[i] = el)}
                 style={{ transform: `translate(-50%, -50%) translate(${outerPositions[i].x - center}px, ${outerPositions[i].y - center}px)` }}
               >
                 <IconBadge>

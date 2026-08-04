@@ -118,18 +118,24 @@ export const Stage = styled.div`
   }
 `;
 
-/* Flattened into an ellipse (not a true circle) for a subtle perspective/orbit feel, purely
-   decorative — independent of the actual node positions, which sit on true circular rings. */
+const spinLeft = keyframes`
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(-360deg); }
+`;
+
+/* True circle (not flattened), solid stroke — purely decorative, independent of the actual
+   node positions (which sit on their own true circular rings). Slowly spins counter-clockwise
+   ("left"), same direction the icons themselves orbit. */
 export const OrbitRing = styled.div`
   position: absolute;
   top: 50%;
   left: 50%;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 50%;
-  transform: translate(-50%, -50%);
   width: ${({ $size }) => `${$size}%`};
-  height: ${({ $size }) => `${$size * 0.55}%`};
+  height: ${({ $size }) => `${$size}%`};
   pointer-events: none;
+  animation: ${spinLeft} 70s linear infinite;
 `;
 
 export const LinesSvg = styled.svg`
