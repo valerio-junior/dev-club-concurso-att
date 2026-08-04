@@ -39,7 +39,7 @@ export const Description = styled.h2`
   color: #ffffff;
   font-family: ${({ theme }) => theme.fonts.heading};
   font-weight: 700;
-  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
   line-height: 1.3;
   opacity: 0;
   transform: scale(0.5);
@@ -77,4 +77,55 @@ export const PlatformImage = styled.img`
   width: 100%;
   height: auto;
   display: block;
+`;
+
+/* Fixed-height slot list — children (CardItem) are absolutely positioned and moved via JS
+   (translateY in px, matching CARD_SLOT in Plataforma.jsx), so the container needs an explicit
+   height instead of relying on normal document flow. */
+export const CardsStack = styled.div`
+  position: relative;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  height: 422px;
+`;
+
+export const CardItem = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  padding: 1.1rem 1.4rem;
+  background: #0d0f14;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-left: 3px solid ${({ theme }) => theme.colors.blueLight};
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  opacity: 0;
+  will-change: opacity, transform;
+`;
+
+export const CardText = styled.p`
+  position: relative;
+  z-index: 1;
+  max-width: 82%;
+  color: #ffffff;
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-weight: 700;
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+  line-height: 1.4;
+`;
+
+export const CardNumber = styled.span`
+  position: absolute;
+  right: 0.6rem;
+  bottom: -0.4rem;
+  color: rgba(255, 255, 255, 0.06);
+  font-family: ${({ theme }) => theme.fonts.heading};
+  font-weight: 800;
+  font-size: 3.6rem;
+  line-height: 1;
+  pointer-events: none;
 `;
