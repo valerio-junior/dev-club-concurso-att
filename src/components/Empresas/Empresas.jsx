@@ -126,10 +126,17 @@ export function Empresas() {
   const cardRefs = useRef([]);
   const cardsRiseRef = useRef(400);
 
-  const { frames, primaryReady } = useVideoFrames(VIDEO_SRC, {
+  // Loads eagerly at mount, same as before — delaying the start (tried via both viewport
+  // proximity and a flat timer) only shrinks the head start it gets while the user is still
+  // scrolling through Hero, which made fast-scrolling arrivals worse, not better. The actual
+  // fix for that is the coarse pass below: a quick low-frame-count sweep across the whole clip
+  // finishes far faster than the full 64-frame pass, so scrubbing anywhere in the section
+  // always has *some* frame to show — not stuck on frame 0 (its priority frame) — while the
+  // fine pass keeps refining in the background.
+  const { frames, coarseFrames, ready, primaryReady } = useVideoFrames(VIDEO_SRC, {
     frameCount: FRAME_COUNT,
     priorityIndex: 0,
-    coarseCount: 0, // no motion-curve smoothing needed here — a plain typing loop, not a turn
+    coarseCount: 16,
   });
 
   // How far below its resting spot the cards column must start to genuinely come from the
@@ -160,14 +167,22 @@ export function Empresas() {
   const render = useCallback(
     (progress) => {
       // Notebook: hand typing / steam looping, camera locked, so it maps 1:1 to scroll —
-      // no reframing needed here (that was only for the Hero's costas->perfil turn).
+      // no reframing needed here (that was only for the Hero's costas->perfil turn). Draws
+      // from the fast-arriving coarse set until the full fine set has finished extracting,
+      // same switchover Hero already does — same ratio space either way (see useVideoFrames),
+      // so there's no jump when it hands off.
       const canvas = canvasRef.current;
-      const list = frames.current;
+      const list = ready ? frames.current : coarseFrames.current;
       if (canvas && list.length) {
         const floatIndex = progress * (list.length - 1);
-        const indexA = Math.floor(floatIndex);
-        const indexB = Math.min(indexA + 1, list.length - 1);
-        const blend = floatIndex - indexA;
+        // The coarse set's frames sit far enough apart in time that cross-fading between two
+        // of them reads as a double-exposure ghost (very different poses blended together)
+        // instead of smooth motion — so while only the coarse set is available, just hold the
+        // single nearest frame with no blend. The fine set's frames are close enough together
+        // for the blend to read as motion instead, so it keeps doing that once ready.
+        const indexA = ready ? Math.floor(floatIndex) : Math.round(floatIndex);
+        const indexB = ready ? Math.min(indexA + 1, list.length - 1) : indexA;
+        const blend = ready ? floatIndex - indexA : 0;
         const frameA = list[indexA];
         const frameB = list[indexB];
 
@@ -229,7 +244,7 @@ export function Empresas() {
         el.style.transform = `translateY(${translateY.toFixed(2)}px)`;
       });
     },
-    [frames]
+    [frames, coarseFrames, ready]
   );
 
   // Grew from 3.6 to 4.39 solely to give the logo phase more absolute scroll room — every

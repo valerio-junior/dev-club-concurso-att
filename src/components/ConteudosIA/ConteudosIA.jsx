@@ -92,9 +92,13 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
     return () => observer.disconnect();
   }, [shouldLoad]);
 
-  const { frames, ready, duration } = useVideoFrames(shouldLoad ? VIDEO_SRC : null, {
+  // Coarse pass finishes far faster than the full 60-frame one, so scrubbing anywhere in the
+  // transformation always has *some* frame to draw while the fine pass keeps refining in the
+  // background — without it, fast scrolling can outrun extraction and get stuck on whatever
+  // frame happened to load first (same fix as Empresas' notebook video, same root cause).
+  const { frames, coarseFrames, ready, coarseReady, duration } = useVideoFrames(shouldLoad ? VIDEO_SRC : null, {
     frameCount: FRAME_COUNT,
-    coarseCount: 0,
+    coarseCount: 16,
   });
 
   const render = useCallback(
@@ -146,7 +150,7 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
       }
 
       const canvas = canvasRef.current;
-      const list = frames.current;
+      const list = ready ? frames.current : coarseFrames.current;
       if (canvas && list && list.length) {
         const skipRatio = duration > 0 ? Math.min(SKIP_SECONDS / duration, 0.9) : 0;
         const scrubT = clamp01((progress - VIDEO_SCRUB_START) / (1 - VIDEO_SCRUB_START));
@@ -189,7 +193,7 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
         // already shows rather than flashing it blank.
       }
     },
-    [frames, duration]
+    [frames, coarseFrames, ready, duration]
   );
 
   // Progress arrives imperatively from FormacoesConteudosIA (the shared pinned Stage hosting
@@ -205,10 +209,10 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
   useImperativeHandle(ref, () => ({ render: renderAtProgress }), [renderAtProgress]);
 
   useEffect(() => {
-    if (ready) {
+    if (coarseReady || ready) {
       render(progressRef.current);
     }
-  }, [ready, render]);
+  }, [coarseReady, ready, render]);
 
   return (
     <Wrapper ref={containerRef}>

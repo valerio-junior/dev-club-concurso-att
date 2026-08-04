@@ -1,0 +1,1 @@
+export { Professores } from "./Professores";

@@ -8,6 +8,8 @@ import { Empresas } from "./components/Empresas";
 import { FormacoesConteudosIA } from "./components/FormacoesConteudosIA";
 import { Evolucao } from "./components/Evolucao";
 import { PlataformaProjetos } from "./components/PlataformaProjetos";
+import { Depoimentos } from "./components/Depoimentos";
+import { Professores } from "./components/Professores";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -24,6 +26,8 @@ function App() {
         <FormacoesConteudosIA />
         <Evolucao />
         <PlataformaProjetos />
+        <Depoimentos />
+        <Professores />
       </main>
     </ThemeProvider>
   );
