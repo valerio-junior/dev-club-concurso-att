@@ -166,6 +166,23 @@ export const BrainImg = styled.img`
   z-index: 3;
 `;
 
+/* Small bright nucleus at the very center of the brain, like the core seen in the middle of
+   the reference sphere — its scale/opacity are driven per-frame from JS as inbound energy
+   arrives, so it visibly pulses brighter each time it "feels" the incoming energy. */
+export const BrainCore = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 16px 6px rgba(190, 220, 255, 0.9), 0 0 34px 14px rgba(140, 190, 255, 0.5);
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+`;
+
 export const Node = styled.div`
   position: absolute;
   top: 50%;
@@ -205,19 +222,4 @@ export const IconBadge = styled.div`
     height: 52%;
     object-fit: contain;
   }
-`;
-
-export const Particle = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: #bcdcff;
-  box-shadow: 0 0 8px 2px rgba(150, 200, 255, 0.9);
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0;
 `;

@@ -14,10 +14,10 @@ import {
   OrbitRing,
   LinesSvg,
   BrainImg,
+  BrainCore,
   Node,
   TeacherBadge,
   IconBadge,
-  Particle,
 } from "./Professores.styles";
 
 const BRAIN_SRC = "/assets/generated/professores-cerebro-transparente.png";
@@ -58,14 +58,20 @@ const ICONS = [
 const INNER_RADIUS_RATIO = 0.27;
 const OUTER_RADIUS_RATIO = 0.47;
 
-// Continuous inward flow (teacher -> brain), one loop per line, each offset by its own phase
-// so they read as an ongoing stream rather than a synchronized pulse.
-const INBOUND_DURATION = 2.6;
-// The brain's own outward pulses run on every line (teachers and icons alike) but on a
-// sparser, gapped cycle — it "answers" less often than it receives, which is what reads as
-// gathering energy before radiating it back out.
-const OUTBOUND_DURATION = 3.4;
-const OUTBOUND_GAP = 2.2;
+// Every node — teacher or icon — connects to the brain with its own straight, direct line
+// (no routing through anyone else), matching the reference: a clean radial web, not a tangle.
+// Only the icon wires carry energy particles, though — slow, unhurried loops (each offset by
+// its own phase) so they read as a calm, ongoing stream rather than something rushing past.
+const INBOUND_DURATION = 7;
+
+// A handful of varied "energy" colors cycled across the wires instead of one flat color, so
+// the whole network reads as richer/more alive.
+const PARTICLE_COLORS = ["#7ecbff", "#ffd166", "#ff9f5a", "#a78bfa", "#6ee7b7", "#ff8fb1"];
+
+// How much the brain's core should still be lit up from an arrival, per frame it's not
+// actively refreshed — this is what turns individual arrivals into a smooth, decaying pulse
+// rather than an on/off flicker.
+const CORE_DECAY = 0.95;
 
 function angleFor(i, count) {
   return (i / count) * 360 - 90;
@@ -78,7 +84,8 @@ export function Professores() {
   const [size, setSize] = useState(600);
 
   const inboundParticleRefs = useRef([]);
-  const outboundParticleRefs = useRef([]);
+  const coreRef = useRef(null);
+  const coreEnergyRef = useRef(0);
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -124,52 +131,52 @@ export function Professores() {
     [center, outerRadius]
   );
 
-  const allPositions = useMemo(() => [...innerPositions, ...outerPositions], [innerPositions, outerPositions]);
-
-  // Drives every energy particle each frame — plain requestAnimationFrame (not scroll-linked),
-  // matching how the rest of this section behaves like a living scene instead of a scrubbed
-  // sequence. Only runs once the section is actually visible.
+  // Drives every energy particle (and the brain's core glow) each frame — plain
+  // requestAnimationFrame (not scroll-linked), matching how the rest of this section behaves
+  // like a living scene instead of a scrubbed sequence. Only runs once actually visible.
   useEffect(() => {
     if (!visible) return undefined;
     let raf;
 
     const animate = (time) => {
       const t = time / 1000;
+      let arrivalEnergy = 0;
 
-      innerPositions.forEach((pos, i) => {
+      // Every icon's own energy travels straight to the brain along its own direct line,
+      // continuously looping with a per-icon phase offset so they don't move in unison.
+      outerPositions.forEach((pos, i) => {
         const el = inboundParticleRefs.current[i];
+        const phase = (t / INBOUND_DURATION + i / outerPositions.length) % 1;
+        const travel = 1 - phase; // 1 -> 0: starts at the icon, arrives at the brain
+        if (travel < 0.12) arrivalEnergy = Math.max(arrivalEnergy, 1 - travel / 0.12);
         if (!el) return;
-        const phase = (t / INBOUND_DURATION + i / innerPositions.length) % 1;
-        const travel = 1 - phase; // 1 -> 0: starts at the teacher's photo, arrives at the brain
         const x = center + (pos.x - center) * travel;
         const y = center + (pos.y - center) * travel;
-        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-        el.style.opacity = phase > 0.94 ? (1 - (phase - 0.94) / 0.06).toFixed(2) : "1";
+        // Set directly as SVG attributes (not a CSS transform on a separate HTML element) —
+        // same coordinate space as the <line> it's supposed to be riding, so it's physically
+        // impossible for it to drift off that line.
+        el.setAttribute("cx", x.toFixed(1));
+        el.setAttribute("cy", y.toFixed(1));
+        // Fades out over the final stretch of the approach, right as it reaches the core —
+        // reads as the energy actually being absorbed into the brain, not just stopping.
+        el.style.opacity = phase > 0.9 ? (1 - (phase - 0.9) / 0.1).toFixed(2) : "1";
       });
 
-      const cycle = OUTBOUND_DURATION + OUTBOUND_GAP;
-      allPositions.forEach((pos, i) => {
-        const el = outboundParticleRefs.current[i];
-        if (!el) return;
-        const localT = (t / cycle + i / allPositions.length) % 1;
-        const activeFraction = OUTBOUND_DURATION / cycle;
-        if (localT >= activeFraction) {
-          el.style.opacity = "0";
-          return;
-        }
-        const travel = localT / activeFraction; // 0 -> 1: leaves the brain, arrives at the node
-        const x = center + (pos.x - center) * travel;
-        const y = center + (pos.y - center) * travel;
-        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-        el.style.opacity = travel < 0.08 ? (travel / 0.08).toFixed(2) : "1";
-      });
+      // The brain's core glow brightens as energy arrives and eases back down otherwise —
+      // decaying rather than snapping keeps it reading as a pulse, not a flicker.
+      coreEnergyRef.current = Math.max(arrivalEnergy, coreEnergyRef.current * CORE_DECAY);
+      if (coreRef.current) {
+        const e = coreEnergyRef.current;
+        coreRef.current.style.transform = `translate(-50%, -50%) scale(${(1 + e * 0.9).toFixed(3)})`;
+        coreRef.current.style.opacity = (0.55 + e * 0.45).toFixed(3);
+      }
 
       raf = requestAnimationFrame(animate);
     };
 
     raf = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(raf);
-  }, [visible, innerPositions, allPositions, center]);
+  }, [visible, outerPositions, center]);
 
   return (
     <Wrapper ref={wrapperRef}>
@@ -201,19 +208,30 @@ export function Professores() {
               {innerPositions.map((pos, i) => (
                 <line key={`inner-line-${i}`} x1={center} y1={center} x2={pos.x} y2={pos.y} stroke="rgba(150,190,255,0.28)" strokeWidth="1" />
               ))}
+              {/* Every icon gets its own straight, direct line to the brain — same as the
+                  teachers above, no routing through anyone else. */}
               {outerPositions.map((pos, i) => (
                 <line key={`outer-line-${i}`} x1={center} y1={center} x2={pos.x} y2={pos.y} stroke="rgba(150,190,255,0.16)" strokeWidth="1" />
               ))}
+
+              {/* Riding the exact same coordinate space as the lines above, instead of a
+                  separately-positioned HTML element that could drift out of sync with them. */}
+              {outerPositions.map((_, i) => {
+                const color = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
+                return (
+                  <circle
+                    key={`inbound-${i}`}
+                    ref={(el) => (inboundParticleRefs.current[i] = el)}
+                    r="4"
+                    fill={color}
+                    style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+                  />
+                );
+              })}
             </LinesSvg>
 
-            {innerPositions.map((_, i) => (
-              <Particle key={`inbound-${i}`} ref={(el) => (inboundParticleRefs.current[i] = el)} />
-            ))}
-            {allPositions.map((_, i) => (
-              <Particle key={`outbound-${i}`} ref={(el) => (outboundParticleRefs.current[i] = el)} style={{ background: "#8fd3ff" }} />
-            ))}
-
             <BrainImg src={BRAIN_SRC} alt="" />
+            <BrainCore ref={coreRef} />
 
             {TEACHERS.map((teacher, i) => (
               <Node
