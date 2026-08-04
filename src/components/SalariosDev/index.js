@@ -1,0 +1,1 @@
+export { SalariosDev } from "./SalariosDev";
