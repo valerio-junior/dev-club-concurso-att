@@ -149,13 +149,22 @@ const CARD_WINDOW = 0.05;
 
 // Laptop-block progress phases: connector draws in first, then the message types inside the
 // compose bar, then "sends" (compose clears, bubble takes over in the chat), then read ticks.
-const CONNECTOR_END = 0.1;
-const TYPE_START = 0.1;
-const TYPE_END = 0.7;
-const SEND_START = 0.7;
-const SEND_END = 0.8;
-const SENT_START = 0.8;
-const SENT_END = 0.9;
+// Rescaled by 200/240 from their original 0/0.1/0.7/0.8/0.9 values (distance grew from 2 to
+// 2.4) so every one of these keeps the exact same *absolute* scroll timing as before — only
+// the shrink phase at the end got more room, by extending into that new distance.
+const CONNECTOR_END = 0.083;
+const TYPE_START = 0.083;
+const TYPE_END = 0.583;
+const SEND_START = 0.583;
+const SEND_END = 0.667;
+const SENT_START = 0.667;
+const SENT_END = 0.75;
+// After the message is sent and read, the notebook itself (image + WhatsApp UI together)
+// shrinks toward center and fades out — stretched to 3x its previous scroll length (was
+// 20% of distance 2 = 20vh, now 25% of distance 2.4 = 60vh) so it's actually visible
+// happening, not a quick blink, before releasing into the next section.
+const SHRINK_START = 0.75;
+const SHRINK_END = 1;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -181,6 +190,7 @@ export function Evolucao() {
   const cardRefs = useRef([]);
   const stopProgressRef = useRef(STOPS.map(() => 0));
   const laptopContainerRef = useRef(null);
+  const laptopStageRef = useRef(null);
   const connectorRef = useRef(null);
   const composeInputRef = useRef(null);
   const composeTextRef = useRef(null);
@@ -296,9 +306,17 @@ export function Evolucao() {
       const sentT = clamp01((progress - SENT_START) / (SENT_END - SENT_START));
       ticksRef.current.style.opacity = sentT.toFixed(3);
     }
+
+    // Finally, the notebook itself shrinks toward center and fades out, before this section
+    // releases into whatever comes next.
+    if (laptopStageRef.current) {
+      const shrinkT = easeOutCubic(clamp01((progress - SHRINK_START) / (SHRINK_END - SHRINK_START)));
+      laptopStageRef.current.style.transform = `scale(${(1 - shrinkT).toFixed(3)})`;
+      laptopStageRef.current.style.opacity = (1 - shrinkT).toFixed(3);
+    }
   }, []);
 
-  useStickyScrub(laptopContainerRef, { distance: 2, onUpdate: renderLaptop });
+  useStickyScrub(laptopContainerRef, { distance: 2.4, onUpdate: renderLaptop });
 
   return (
     <>
@@ -337,7 +355,7 @@ export function Evolucao() {
 
       <LaptopWrapper ref={laptopContainerRef}>
         <Connector ref={connectorRef} />
-        <LaptopStage>
+        <LaptopStage ref={laptopStageRef}>
           <LaptopImage src={LAPTOP_SRC} alt="Notebook aberto com WhatsApp" />
           <LaptopVignette />
           <WhatsAppScreen>

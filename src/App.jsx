@@ -7,6 +7,7 @@ import { Hero } from "./components/Hero";
 import { Empresas } from "./components/Empresas";
 import { FormacoesConteudosIA } from "./components/FormacoesConteudosIA";
 import { Evolucao } from "./components/Evolucao";
+import { Plataforma } from "./components/Plataforma";
 
 // Demais seções serão importadas e compostas aqui conforme forem criadas.
 
@@ -22,6 +23,7 @@ function App() {
         <Empresas />
         <FormacoesConteudosIA />
         <Evolucao />
+        <Plataforma />
       </main>
     </ThemeProvider>
   );

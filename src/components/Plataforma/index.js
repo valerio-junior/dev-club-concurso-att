@@ -1,0 +1,1 @@
+export { Plataforma } from "./Plataforma";

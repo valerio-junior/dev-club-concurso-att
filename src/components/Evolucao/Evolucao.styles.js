@@ -188,6 +188,8 @@ export const Connector = styled.div`
 export const LaptopStage = styled.div`
   position: relative;
   width: min(60vw, 900px, calc(78vh * 1.2987));
+  transform-origin: center;
+  will-change: transform, opacity;
 `;
 
 export const LaptopImage = styled.img`
