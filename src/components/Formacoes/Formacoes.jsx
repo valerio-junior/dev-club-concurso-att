@@ -230,11 +230,7 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
     <Wrapper ref={containerRef}>
       <BeltLayer ref={beltLayerRef}>
         <TextCol ref={textColRef}>
-          <Heading>
-            Formações e trilhas diretas
-            <br />
-            para você não se perder no caminho
-          </Heading>
+          <Heading>Formações e trilhas diretas para você não se perder no caminho</Heading>
         </TextCol>
 
         <CardsRow ref={cardsRowRef}>

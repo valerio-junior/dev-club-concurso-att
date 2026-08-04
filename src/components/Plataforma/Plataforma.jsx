@@ -1,5 +1,4 @@
-import { useCallback, useRef } from "react";
-import { useStickyScrub } from "../../hooks/useStickyScrub";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 import {
   Wrapper,
   Inner,
@@ -51,8 +50,11 @@ const BLUR_START_PX = 14;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-export function Plataforma() {
-  const containerRef = useRef(null);
+// Progress arrives imperatively from PlataformaProjetos (the shared pinned Stage hosting this
+// section together with Projetos) instead of this section pinning itself — see that component
+// for the combined scroll choreography (this section's own timing/distance is unchanged; only
+// the window-closing exit that reveals Projetos afterward lives there).
+export const Plataforma = forwardRef(function Plataforma(_props, ref) {
   const descRef = useRef(null);
   const stageRef = useRef(null);
   const cardRefs = useRef([]);
@@ -109,10 +111,10 @@ export function Plataforma() {
     });
   }, []);
 
-  useStickyScrub(containerRef, { distance: 4.4, onUpdate: render });
+  useImperativeHandle(ref, () => ({ render }), [render]);
 
   return (
-    <Wrapper ref={containerRef}>
+    <Wrapper>
       <Inner>
         <LeftCol>
           <Description ref={descRef}>Plataforma de trilha do básico ao avançado</Description>
@@ -133,4 +135,4 @@ export function Plataforma() {
       </Inner>
     </Wrapper>
   );
-}
+});

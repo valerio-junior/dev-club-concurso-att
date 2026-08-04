@@ -1,0 +1,1 @@
+export { PlataformaProjetos } from "./PlataformaProjetos";

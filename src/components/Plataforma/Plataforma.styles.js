@@ -1,9 +1,8 @@
 import styled from "styled-components";
 
 export const Wrapper = styled.section`
-  position: relative;
-  width: 100%;
-  height: 100vh;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: ${({ theme }) => theme.colors.background};
 `;

@@ -45,6 +45,9 @@ export const Heading = styled.h2`
   font-weight: 700;
   font-size: clamp(1.8rem, 3.4vw, 2.8rem);
   line-height: 1.3;
+  /* Balances line lengths across wraps (never splits a word) instead of a manual <br /> that
+     can leave an orphaned word on its own line at narrower widths. */
+  text-wrap: balance;
 `;
 
 /* The row all the cards ride in — laid out side by side (not stacked), naturally
@@ -115,4 +118,8 @@ export const CardDescription = styled.p`
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: clamp(0.95rem, 1.2vw, 1.05rem);
   line-height: 1.6;
+  /* Balances line lengths across wraps (never splits a word — a whole word that doesn't fit
+     just moves entirely to the next line) instead of leaving an orphaned single word alone
+     on the last line. */
+  text-wrap: balance;
 `;
