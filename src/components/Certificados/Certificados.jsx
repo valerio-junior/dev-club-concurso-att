@@ -41,7 +41,7 @@ export function Certificados() {
   }, []);
 
   return (
-    <Wrapper ref={wrapperRef}>
+    <Wrapper id="certificados" ref={wrapperRef}>
       <Inner data-visible={visible}>
         <Title>Certificado gerado e assinado diretamente pelo Rodolfo Mori</Title>
         <Description>Certificados que comprovam seu conhecimento em diversas áreas da tecnologia</Description>

@@ -54,7 +54,7 @@ export function PlataformaProjetos() {
   useStickyScrub(containerRef, { distance: COMBINED_DISTANCE, onUpdate: render });
 
   return (
-    <Stage ref={containerRef}>
+    <Stage id="projetos" ref={containerRef}>
       <Layer style={{ zIndex: 1 }}>
         <Projetos ref={projetosRef} />
       </Layer>

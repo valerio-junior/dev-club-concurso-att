@@ -14,8 +14,8 @@ import { ModuloBonus } from "./components/ModuloBonus";
 import { Certificados } from "./components/Certificados";
 import { SalariosDev } from "./components/SalariosDev";
 import { Garantia } from "./components/Garantia";
-
-// Demais seções serão importadas e compostas aqui conforme forem criadas.
+import { Faq } from "./components/Faq";
+import { Footer } from "./components/Footer";
 
 function App() {
   useLenis();
@@ -36,7 +36,9 @@ function App() {
         <Certificados />
         <SalariosDev />
         <Garantia />
+        <Faq />
       </main>
+      <Footer />
     </ThemeProvider>
   );
 }

@@ -363,10 +363,10 @@ export function Professores() {
   }, [visible, center, innerRadius, outerRadius]);
 
   return (
-    <Wrapper ref={wrapperRef}>
+    <Wrapper id="professores" ref={wrapperRef}>
       <Inner>
         <LeftCol>
-          <Title>Mentores com a melhor didática e te auxiliando e nivelando do básico ao avançado</Title>
+          <Title>Mentores com a melhor didática, te auxiliando e nivelando do básico ao avançado</Title>
           <Description>
             Esses professores ajudam e vêm ajudando milhares de pessoas a ingressar no mercado de tecnologia.
           </Description>

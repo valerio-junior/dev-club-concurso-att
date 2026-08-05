@@ -138,7 +138,7 @@ export function Depoimentos() {
 
   return (
     <Wrapper>
-      <Heading>O que dizem nossos alunos</Heading>
+      <Heading>Depoimento dos nossos alunos</Heading>
       <Stage>
         <ArrowButton $side="left" $visible={index > 0} onClick={goPrev} aria-label="Depoimento anterior">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
