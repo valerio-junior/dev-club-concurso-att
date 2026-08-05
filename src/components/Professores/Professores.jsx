@@ -368,7 +368,7 @@ export function Professores() {
         <LeftCol>
           <Title>Mentores com a melhor didática, te auxiliando e nivelando do básico ao avançado</Title>
           <Description>
-            Esses professores ajudam e vêm ajudando milhares de pessoas a ingressar no mercado de tecnologia.
+            Esses professores ajudam e estão ajudando milhares de pessoas a ingressar no mercado de tecnologia.
           </Description>
           <Checklist>
             {CHECKLIST.map((text) => (

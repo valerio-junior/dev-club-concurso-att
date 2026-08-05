@@ -104,7 +104,7 @@ const STOPS = [
     x: 70,
     y: 110,
     title: "Suporte",
-    description: "Dúvida nunca fica parada. Nosso time responde rápido pra você não travar em nenhuma etapa do aprendizado.",
+    description: "Dúvidas nunca ficam parada. Nosso time responde rápido pra você não travar em nenhuma etapa do aprendizado.",
     Icon: IconSupport,
   },
   {

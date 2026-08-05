@@ -41,7 +41,7 @@ const TESTIMONIALS = [
   {
     id: 4,
     name: "Mosh Ramedami",
-    role: "Desenvolvedor Back-end no ",
+    role: "Desenvolvedor Front-end no ",
     company: "Facebook",
     quote:
       '"Consegui aplicar no meu trabalho atual tudo o que aprendi e logo fui promovido. A qualidade das aulas e o foco em UI/UX moderno me destacaram de todos os outros candidatos."',
