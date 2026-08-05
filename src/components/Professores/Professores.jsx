@@ -26,6 +26,7 @@ const BRAIN_SRC = "/assets/generated/professores-cerebro-transparente.png";
 const CHECKLIST = [
   "Melhor didática do mercado e conteúdos exclusivos",
   "Recrutadora te auxiliando frente a frente",
+  "Terapeuta profissional para quebrar as barreiras da sua mente",
   "Profissional e perita em Inteligência Artificial",
   "Profissional fullstack te auxiliando da construção ao deploy",
 ];
@@ -37,6 +38,9 @@ const TEACHERS = [
   { id: "henrique", img: "/assets/professores/henrique-mentor.jpg" },
   { id: "juliana", img: "/assets/professores/juliana-recruter.jpg" },
   { id: "mateus", img: "/assets/professores/mateus-ia.jpg" },
+  // Foto de corpo inteiro (não um headshot como as outras) — desloca o crop do badge para o
+  // topo, priorizando cabeça/cabelo em vez de cortar no meio e mostrar só o torso.
+  { id: "terapeuta", img: "/assets/professores/terapeuta.webp", objectPosition: "50% 12%" },
 ];
 
 // Anel externo — ferramentas de IA misturadas com tecnologias principais, mais distante do cérebro.
@@ -54,6 +58,7 @@ const ICONS = [
   "/assets/logos/tech/nodedotjs.svg",
   "/assets/logos/tech/git.svg",
   "/assets/logos/tech/github.svg",
+  "/assets/logos/terapia.svg",
 ].map((src, i) => ({ id: `icon-${i}`, src }));
 
 // Uma cor de destaque (estilo marca) por ícone, na mesma ordem de ICONS — usada na borda/brilho do hover.
@@ -71,6 +76,7 @@ const ICON_COLORS = [
   "#339933", // Node.js
   "#F05032", // Git
   "#8250DF", // GitHub
+  "#F472B6", // Terapia
 ];
 
 // Os professores não têm uma "cor de marca" própria, então todos compartilham esse mesmo
@@ -96,8 +102,8 @@ const INBOUND_DURATION = 2.4;
 
 // Os ícones são liberados em pequenas rajadas escalonadas (2, depois 1, depois 1, depois 2, ...)
 // em vez de um fluxo contínuo e uniformemente espaçado, para que as chegadas pareçam pequenas
-// ondas distintas em vez de tudo se movendo o tempo todo. A soma precisa dar ICONS.length (13).
-const RELEASE_GROUPS = [2, 1, 1, 2, 1, 2, 1, 1, 2];
+// ondas distintas em vez de tudo se movendo o tempo todo. A soma precisa dar ICONS.length (14).
+const RELEASE_GROUPS = [2, 1, 1, 2, 1, 2, 1, 1, 2, 1];
 const GROUP_GAP = 0.6; // segundos entre o início de cada rajada
 const RELEASE_OFFSETS = RELEASE_GROUPS.flatMap((count, groupIndex) => Array(count).fill(groupIndex * GROUP_GAP));
 const CYCLE_LENGTH = RELEASE_GROUPS.length * GROUP_GAP;
@@ -444,7 +450,7 @@ export function Professores() {
                 style={{ transform: `translate(-50%, -50%) translate(${innerPositions[i].x - center}px, ${innerPositions[i].y - center}px)` }}
               >
                 <TeacherBadge ref={(el) => (teacherBadgeRefs.current[i] = el)}>
-                  <img src={teacher.img} alt="" />
+                  <img src={teacher.img} alt="" style={teacher.objectPosition ? { objectPosition: teacher.objectPosition } : undefined} />
                 </TeacherBadge>
               </Node>
             ))}
