@@ -20,9 +20,9 @@ import {
 
 const VIDEO_SRC = "/assets/generated/ia-rodolfo.mp4";
 const FRAME_COUNT = 60;
-// The first couple seconds of the source clip show him smiling against a flat gray
-// background before the actual human->robot transformation begins — skipped by shifting
-// where in the raw clip we start sampling from, instead of re-cutting the file itself.
+// Os primeiros segundos do clipe original mostram ele sorrindo em um fundo cinza chapado
+// antes da transformação humano->robô realmente começar — pulados deslocando de onde no clipe
+// bruto começamos a amostrar, em vez de recortar o próprio arquivo.
 const SKIP_SECONDS = 2.5;
 
 const ICONS = [
@@ -32,29 +32,32 @@ const ICONS = [
   { src: "/assets/logos/ai/copilot.svg", alt: "Copilot" },
   { src: "/assets/logos/ai/meta-ai.svg", alt: "Meta AI", background: "linear-gradient(135deg, #4E7FE1, #2E5FD9)" },
 ];
-// Each icon's shine sweep gets its own slot in the loop (icon i starts at i * SHINE_CYCLE /
-// count), so only one icon is ever mid-sweep at a time, in left-to-right sequence.
+// A varredura de brilho de cada ícone tem seu próprio espaço no loop (o ícone i começa em
+// i * SHINE_CYCLE / count), então só um ícone está no meio da varredura por vez, em sequência da
+// esquerda para a direita.
 const SHINE_CYCLE = 6;
 
 const TEXT_WINDOW = 0.15;
 const ICONS_START = 0.13;
 const ICONS_END = 0.32;
 const ICONS_REVEAL_FRACTION = 0.55;
-// Wide fade-in window (was a snappy 0.08 — read as "popping in" instead of tracking scroll) so
-// the video stage eases in gradually as the user scrolls, overlapping the tail of the icons
-// reveal instead of only starting once they're fully done.
+// Janela de fade-in larga (era um 0.08 rápido demais — passava a sensação de "surgir de repente"
+// em vez de acompanhar o scroll), então o estágio do vídeo aparece gradualmente enquanto o usuário
+// rola, se sobrepondo ao final da revelação dos ícones em vez de só começar quando eles terminam
+// completamente.
 const VIDEO_FADE_START = 0.25;
 const VIDEO_FADE_END = 0.55;
 const VIDEO_SCRUB_START = 0.55;
-// The first description crossfades into the second one during this window, synced with the
-// Rodolfo transformation already underway (VIDEO_SCRUB_START) — the icons row is untouched by
-// this and stays visible throughout.
+// A primeira descrição faz crossfade para a segunda durante essa janela, sincronizada com a
+// transformação do Rodolfo já em andamento (VIDEO_SCRUB_START) — a fileira de ícones não é afetada
+// por isso e permanece visível o tempo todo.
 const DESC_SWAP_START = 0.6;
 const DESC_SWAP_END = 0.82;
 const FOCUS_Y = 0.38;
-// The regenerated clip's own background now already matches #0d131a (fixed at the source via
-// a flat-background reference photo), so this is back to a light safety net for any minor
-// residual drift, same as the Hero's version — not compensating for a real mismatch anymore.
+// O fundo do próprio clipe regenerado agora já bate com #0d131a (corrigido na origem através de
+// uma foto de referência com fundo chapado), então isso voltou a ser apenas uma rede de segurança
+// leve para qualquer pequeno desvio residual, igual à versão do Hero — não está mais compensando
+// uma incompatibilidade real.
 const BACKGROUND_CRUSH_MIN = 0.05;
 const BACKGROUND_CRUSH_MAX = 0.2;
 
@@ -70,10 +73,10 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
   const canvasRef = useRef(null);
   const progressRef = useRef(0);
 
-  // Only start decoding/extracting this section's video once it's actually approaching the
-  // viewport — mounting every section's video work eagerly at page load makes them all
-  // compete for the browser's video decoder at once, which is what caused the Hero's own
-  // motion curve to lag and visibly jump earlier.
+  // Só começa a decodificar/extrair o vídeo dessa seção quando ela realmente está se aproximando
+  // do viewport — montar o trabalho de vídeo de todas as seções de forma antecipada no carregamento
+  // da página faz todas competirem pelo decodificador de vídeo do navegador ao mesmo tempo, o que
+  // foi o que causou a própria curva de movimento do Hero atrasar e pular visivelmente antes.
   const [shouldLoad, setShouldLoad] = useState(false);
   useEffect(() => {
     const el = containerRef.current;
@@ -92,10 +95,11 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
     return () => observer.disconnect();
   }, [shouldLoad]);
 
-  // Coarse pass finishes far faster than the full 60-frame one, so scrubbing anywhere in the
-  // transformation always has *some* frame to draw while the fine pass keeps refining in the
-  // background — without it, fast scrolling can outrun extraction and get stuck on whatever
-  // frame happened to load first (same fix as Empresas' notebook video, same root cause).
+  // A passada grosseira termina bem mais rápido que a completa de 60 frames, então dar scrub em
+  // qualquer ponto da transformação sempre tem *algum* frame para desenhar enquanto a passada fina
+  // continua refinando em segundo plano — sem isso, um scroll rápido pode ultrapassar a extração e
+  // ficar travado em qualquer frame que tenha carregado primeiro (mesma correção do vídeo do
+  // notebook do Empresas, mesma causa raiz).
   const { frames, coarseFrames, ready, coarseReady, duration } = useVideoFrames(shouldLoad ? VIDEO_SRC : null, {
     frameCount: FRAME_COUNT,
     coarseCount: 16,
@@ -103,8 +107,9 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
 
   const render = useCallback(
     (progress) => {
-      // First description: fades/rises in as before, then — once the transformation is well
-      // underway — fades/drifts back out as the second description crossfades over it.
+      // Primeira descrição: aparece com fade/sobe como antes, depois — assim que a transformação já
+      // está bem encaminhada — desaparece com fade/deslocando para cima enquanto a segunda descrição
+      // faz crossfade por cima dela.
       if (descRef.current) {
         let opacity;
         let y;
@@ -124,8 +129,8 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
         descRef.current.style.transform = `translateY(${y.toFixed(2)}px)`;
       }
 
-      // Second description: crossfades in over the first during the same swap window, then
-      // stays put — it's the one still visible once the transformation finishes.
+      // Segunda descrição: faz crossfade por cima da primeira durante a mesma janela de troca, depois
+      // fica parada — é a que continua visível quando a transformação termina.
       if (desc2Ref.current) {
         const t = easeOutCubic(clamp01((progress - DESC_SWAP_START) / (DESC_SWAP_END - DESC_SWAP_START)));
         desc2Ref.current.style.opacity = t.toFixed(3);
@@ -189,15 +194,15 @@ export const ConteudosIA = forwardRef(function ConteudosIA(_props, ref) {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.globalAlpha = 1;
         }
-        // If neither neighboring frame has finished extracting yet, keep whatever the canvas
-        // already shows rather than flashing it blank.
+        // Se nenhum dos frames vizinhos terminou de extrair ainda, mantém o que o canvas já está
+        // mostrando em vez de piscar em branco.
       }
     },
     [frames, coarseFrames, ready, duration]
   );
 
-  // Progress arrives imperatively from FormacoesConteudosIA (the shared pinned Stage hosting
-  // this section together with Formacoes) instead of this section pinning itself.
+  // O progresso chega de forma imperativa a partir do FormacoesConteudosIA (o Stage fixado
+  // compartilhado que hospeda essa seção junto com Formacoes) em vez dessa seção fixar a si mesma.
   const renderAtProgress = useCallback(
     (progress) => {
       progressRef.current = progress;

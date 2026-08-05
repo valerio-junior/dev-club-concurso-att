@@ -3,10 +3,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// `main` carries `perspective` for the site's 3D scroll reveals, which turns any descendant's
-// `position: fixed` into `absolute`-relative-to-that-ancestor instead of the viewport (this is
-// why it's scoped to `main` and not `#root` — see GlobalStyle.js). Pinning via transform
-// sidesteps that regardless (and is also the standard recommendation when pairing with Lenis).
+// `main` carrega `perspective` para os efeitos de revelação 3D no scroll do site, o que transforma
+// qualquer `position: fixed` de um descendente em `absolute`-relativo-a-esse-ancestral em vez do
+// viewport (por isso está restrito a `main` e não a `#root` — ver GlobalStyle.js). Fixar via
+// transform contorna isso de qualquer forma (e também é a recomendação padrão ao combinar com o
+// Lenis).
 ScrollTrigger.defaults({ pinType: "transform" });
 
 export { gsap, ScrollTrigger };

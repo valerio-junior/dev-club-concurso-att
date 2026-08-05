@@ -35,15 +35,15 @@ export const Heading = styled.h1`
   letter-spacing: -0.01em;
 `;
 
-/* Keeps a whole word together as one atomic box, so the line only ever wraps between
-   words — the per-letter spans inside can't get split across two lines. */
+/* Mantém a palavra inteira junta como uma caixa atômica, para que a linha só quebre entre
+   palavras — os spans de cada letra dentro dela não podem ficar divididos entre duas linhas. */
 export const Word = styled.span`
   display: inline-block;
   white-space: nowrap;
 `;
 
-/* Each letter starts invisible/lowered; the scroll handler reveals them in a staggered
-   wave (opacity + a small rise) instead of the whole line fading in as one block. */
+/* Cada letra começa invisível/abaixada; o handler de scroll as revela numa onda escalonada
+   (opacidade + uma pequena subida) em vez da linha inteira aparecer com fade de uma vez só. */
 export const Char = styled.span`
   display: inline-block;
   opacity: 0;
@@ -54,9 +54,10 @@ export const Char = styled.span`
 export const CharacterStage = styled.div`
   position: absolute;
   top: 50%;
-  /* Resting (progress = 0) position/blur as the CSS default, so it's already correct
-     before any scroll fires and before JS has measured/painted anything. A themed
-     fallback fill (not a random photo) shows while the priority frame is still loading. */
+  /* Posição/desfoque de repouso (progress = 0) como padrão do CSS, para que já esteja correto
+     antes de qualquer scroll disparar e antes do JS ter medido/pintado qualquer coisa. Um
+     preenchimento de fallback com o tema (não uma foto aleatória) aparece enquanto o frame de
+     prioridade ainda está carregando. */
   left: 50%;
   width: clamp(260px, 30vw, 440px);
   aspect-ratio: 3 / 4;
@@ -83,8 +84,8 @@ export const CharacterCanvas = styled.canvas`
   }
 `;
 
-/* Fades the canvas edges into the page background, hiding any backdrop-color mismatch
-   from the generated clip and doubling as a cinematic vignette. */
+/* Esmaece as bordas do canvas no fundo da página, escondendo qualquer incompatibilidade de cor
+   de fundo do clipe gerado e servindo também como uma vinheta cinematográfica. */
 export const Vignette = styled.div`
   position: absolute;
   inset: 0;

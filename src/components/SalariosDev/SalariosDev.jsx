@@ -62,10 +62,11 @@ export function SalariosDev() {
     return () => observer.disconnect();
   }, []);
 
-  // Counts every card from R$0,00 up to its final value together, once, the moment the section
-  // becomes visible — driven imperatively (text content + bar width set directly on the DOM
-  // nodes each frame) rather than React state, matching how animated values are done elsewhere
-  // on the site (Plataforma, Professores) to avoid a re-render per frame.
+  // Conta todos os cards de R$0,00 até seu valor final juntos, uma vez, no momento em que a seção
+  // se torna visível — controlado de forma imperativa (conteúdo de texto + largura da barra
+  // definidos diretamente nos nós do DOM a cada frame) em vez de estado do React, do mesmo jeito
+  // que valores animados são feitos em outras partes do site (Plataforma, Professores) para
+  // evitar um re-render por frame.
   useEffect(() => {
     if (!visible) return undefined;
 

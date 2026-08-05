@@ -19,22 +19,23 @@ import {
 } from "./Empresas.styles";
 
 const VIDEO_SRC = "/assets/generated/empresas-notebook.mp4";
-// Longer clip now (opening + typing, ~10s vs the previous 5s loop), so more samples to
-// keep the same temporal resolution.
+// Clipe mais longo agora (abertura + digitação, ~10s em vez do loop anterior de 5s), então mais
+// amostras para manter a mesma resolução temporal.
 const FRAME_COUNT = 64;
 
-// Fraction of the scroll-progress range where the lid finishes opening AND the hands have
-// had time to settle onto the keyboard — estimated, not measured from an actual frame (may
-// need a calibration pass once seen). Pushed further out than the lid-open point itself so
-// logos don't start while the hands are still mid-air moving down to the keys.
-// NOTE: this fraction maps directly to a raw video frame (floatIndex = progress * frameCount)
-// regardless of `distance` — distance only changes how much physical scrolling a given
-// progress fraction takes, never which video frame it shows. So this must NOT be rescaled
-// when distance changes (an earlier attempt to do that made logos start before the lid had
-// actually finished opening in the video). 0.8 instead of the original 0.78 adds a touch more
-// buffer, per request, on top of fixing that regression.
+// Fração do intervalo de progresso do scroll em que a tampa termina de abrir E as mãos já
+// tiveram tempo de se acomodar no teclado — estimado, não medido a partir de um frame real (pode
+// precisar de um ajuste de calibração depois de visto). Empurrado mais para frente que o próprio
+// ponto de abertura da tampa para que os logos não comecem enquanto as mãos ainda estão no ar
+// descendo até as teclas.
+// OBS: essa fração mapeia diretamente para um frame de vídeo bruto (floatIndex = progress *
+// frameCount) independente de `distance` — distance só muda quanto de scroll físico uma
+// determinada fração de progresso consome, nunca qual frame de vídeo ela mostra. Então isso NÃO
+// deve ser reescalado quando distance mudar (uma tentativa anterior de fazer isso fez os logos
+// começarem antes da tampa realmente terminar de abrir no vídeo). 0.8 em vez do 0.78 original
+// adiciona um pouco mais de margem, conforme pedido, além de corrigir essa regressão.
 const OPEN_THRESHOLD = 0.8;
-const SCREEN_FADE_IN = 0.08; // how much extra progress the screen itself takes to fade in after that
+const SCREEN_FADE_IN = 0.08; // quanto de progresso extra a própria tela leva para aparecer depois disso
 
 const LOGOS = [
   { src: "/assets/logos/netflix.svg", alt: "Netflix" },
@@ -43,13 +44,15 @@ const LOGOS = [
   { src: "/assets/logos/mercadolivre.svg", alt: "Mercado Livre" },
 ];
 
-// Each logo gets a real hold (a pause at full opacity) instead of directly cross-fading into
-// the next one — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequential within the range
-// left after OPEN_THRESHOLD. The last entry's holdEnd/fadeOutEnd are overridden to Infinity
-// at render time (see the isLast check below), so it stays instead of fading out.
-// Widened to fill [OPEN_THRESHOLD, 1] (now 0.2 wide instead of the original 0.22 — narrower
-// fraction, but distance grew from 3.6 to 4.39, so the *absolute* scroll for this whole phase
-// still ends up larger than before) — same shape/order per logo, just more room per hold.
+// Cada logo ganha uma pausa real (um momento parado em opacidade total) em vez de fazer um
+// crossfade direto para o próximo — [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd], sequencial
+// dentro do intervalo que sobra depois de OPEN_THRESHOLD. O holdEnd/fadeOutEnd da última entrada
+// são substituídos por Infinity no momento da renderização (ver o isLast check abaixo), para que
+// ele permaneça em vez de desaparecer.
+// Ampliado para preencher [OPEN_THRESHOLD, 1] (agora 0.2 de largura em vez do 0.22 original —
+// fração mais estreita, mas a distância cresceu de 3.6 para 4.39, então o scroll *absoluto* para
+// toda essa fase acaba sendo maior que antes) — mesmo formato/ordem por logo, só mais espaço por
+// pausa.
 const LOGO_WINDOWS = [
   [0.8, 0.818, 0.841, 0.85],
   [0.85, 0.868, 0.891, 0.9],
@@ -65,24 +68,26 @@ const CARDS = [
   "E como estar preparado para trabalhar em empresas de alto nível",
 ];
 
-// Title (+ eyebrow) doesn't move — it just fades in slowly, in place — so it only needs
-// [fadeInStart, fadeInEnd]; once in, it stays. Rescaled (same 0.82 factor as OPEN_THRESHOLD)
-// to keep its absolute scroll timing identical after distance grew — see OPEN_THRESHOLD above.
+// O título (+ eyebrow) não se move — ele só aparece lentamente com fade, no lugar — então só
+// precisa de [fadeInStart, fadeInEnd]; uma vez dentro, ele fica. Reescalado (mesmo fator 0.82 do
+// OPEN_THRESHOLD) para manter seu tempo de scroll absoluto idêntico depois que a distância cresceu
+// — ver OPEN_THRESHOLD acima.
 const TITLE_WINDOW = [0, 0.115];
 
-// Cards: [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd] in scroll-progress (0..1) —
-// sequential, one fully gone before the next starts appearing. Fade-in windows are
-// intentionally short (fast) now that easing does the work of making the rise feel smooth.
-// Rescaled along with TITLE_WINDOW/OPEN_THRESHOLD — same absolute scroll timing as before.
+// Cards: [fadeInStart, fadeInEnd, holdEnd, fadeOutEnd] em progresso de scroll (0..1) —
+// sequencial, um totalmente sumido antes do próximo começar a aparecer. As janelas de fade-in são
+// propositalmente curtas (rápidas) agora que o easing faz o trabalho de deixar a subida suave.
+// Reescalado junto com TITLE_WINDOW/OPEN_THRESHOLD — mesmo tempo de scroll absoluto de antes.
 const CARD_WINDOWS = [
   [0.115, 0.197, 0.312, 0.353],
   [0.353, 0.435, 0.549, 0.59],
   [0.59, 0.672, 0.787, 0.82],
 ];
 
-// Cards: opacity ramps to 1 within this fraction of the fade-in window — kept under 1 so
-// the card is still visibly traveling (not just fading in place). The title has no travel,
-// so it uses fraction 1 (opacity eases gradually across its whole window instead).
+// Cards: a opacidade sobe até 1 dentro dessa fração da janela de fade-in — mantida abaixo de 1
+// para que o card ainda esteja visivelmente se deslocando (não só aparecendo no lugar). O título
+// não tem deslocamento, então usa fração 1 (a opacidade suaviza gradualmente por toda a janela
+// dele, em vez disso).
 const CARD_OPACITY_FRACTION = 0.55;
 const EXIT_RISE_PX = 48;
 const ENTER_RISE_BUFFER_PX = 40;
@@ -91,10 +96,11 @@ const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
 /**
- * Animates one sequential item: rises from `riseDistance` below into place (fully eased,
- * not linear — a linear translate reads as stiff/mechanical), then optionally holds, then
- * optionally fades out while drifting up. `riseDistance: 0` gives a pure in-place fade (used
- * for the title). Pass holdEnd/fadeOutEnd as Infinity for an item that should stay once in.
+ * Anima um item sequencial: sobe de `riseDistance` abaixo até o lugar (totalmente suavizado,
+ * não linear — um translate linear passa a sensação de rígido/mecânico), depois opcionalmente
+ * segura, depois opcionalmente desaparece enquanto sobe. `riseDistance: 0` dá um fade puro no
+ * lugar (usado para o título). Passe holdEnd/fadeOutEnd como Infinity para um item que deve
+ * permanecer depois de entrar.
  */
 function animateSequentialItem(t, fadeInStart, fadeInEnd, holdEnd, fadeOutEnd, riseDistance, opacityFraction = CARD_OPACITY_FRACTION) {
   if (t <= fadeInStart) return { opacity: 0, translateY: riseDistance };
@@ -126,26 +132,27 @@ export function Empresas() {
   const cardRefs = useRef([]);
   const cardsRiseRef = useRef(400);
 
-  // Loads eagerly at mount, same as before — delaying the start (tried via both viewport
-  // proximity and a flat timer) only shrinks the head start it gets while the user is still
-  // scrolling through Hero, which made fast-scrolling arrivals worse, not better. The actual
-  // fix for that is the coarse pass below: a quick low-frame-count sweep across the whole clip
-  // finishes far faster than the full 64-frame pass, so scrubbing anywhere in the section
-  // always has *some* frame to show — not stuck on frame 0 (its priority frame) — while the
-  // fine pass keeps refining in the background.
+  // Carrega de forma antecipada assim que monta, igual antes — adiar o início (tentado tanto via
+  // proximidade do viewport quanto um timer fixo) só reduz a vantagem que ele ganha enquanto o
+  // usuário ainda está rolando pelo Hero, o que piorava as chegadas em scroll rápido, não
+  // melhorava. A correção de fato para isso é a passada grosseira abaixo: uma varredura rápida com
+  // poucos frames por todo o clipe termina bem mais rápido que a passada completa de 64 frames,
+  // então dar scrub em qualquer ponto da seção sempre tem *algum* frame para mostrar — não fica
+  // travado no frame 0 (seu frame de prioridade) — enquanto a passada fina continua refinando em
+  // segundo plano.
   const { frames, coarseFrames, ready, primaryReady } = useVideoFrames(VIDEO_SRC, {
     frameCount: FRAME_COUNT,
     priorityIndex: 0,
     coarseCount: 16,
   });
 
-  // How far below its resting spot the cards column must start to genuinely come from the
-  // bottom edge of the screen — measured against the real viewport. The title doesn't move,
-  // so it needs no such measurement (see the `riseDistance: 0` call further down).
+  // A que distância abaixo de sua posição de repouso a coluna de cards precisa começar para
+  // realmente vir da borda inferior da tela — medido contra o viewport real. O título não se move,
+  // então não precisa dessa medição (ver a chamada `riseDistance: 0` mais abaixo).
   const measureRiseDistances = useCallback(() => {
     if (cardsColRef.current) {
-      // CardsCol itself is never transformed (only the Card children inside it are),
-      // so its position is always reliable to read directly.
+      // O próprio CardsCol nunca é transformado (só os filhos Card dentro dele são),
+      // então sua posição é sempre confiável de ler diretamente.
       const rect = cardsColRef.current.getBoundingClientRect();
       cardsRiseRef.current = Math.max(window.innerHeight - rect.top + ENTER_RISE_BUFFER_PX, 0);
     }
@@ -154,9 +161,10 @@ export function Empresas() {
   useEffect(() => {
     measureRiseDistances();
     window.addEventListener("resize", measureRiseDistances);
-    // Sibling sections added later (their pin-spacers, videos, etc.) can shift overall page
-    // layout after this section's own initial measurement — GSAP's "refresh" event fires
-    // whenever ScrollTrigger recalculates anything, which is the general signal to re-measure.
+    // Seções irmãs adicionadas depois (seus próprios pin-spacers, vídeos, etc.) podem mudar o
+    // layout geral da página depois da medição inicial dessa seção — o evento "refresh" do GSAP
+    // dispara sempre que o ScrollTrigger recalcula qualquer coisa, que é o sinal geral para
+    // remedir.
     ScrollTrigger.addEventListener("refresh", measureRiseDistances);
     return () => {
       window.removeEventListener("resize", measureRiseDistances);
@@ -166,20 +174,21 @@ export function Empresas() {
 
   const render = useCallback(
     (progress) => {
-      // Notebook: hand typing / steam looping, camera locked, so it maps 1:1 to scroll —
-      // no reframing needed here (that was only for the Hero's costas->perfil turn). Draws
-      // from the fast-arriving coarse set until the full fine set has finished extracting,
-      // same switchover Hero already does — same ratio space either way (see useVideoFrames),
-      // so there's no jump when it hands off.
+      // Notebook: digitação da mão / vapor em loop, câmera travada, então mapeia 1:1 com o scroll —
+      // não precisa de reenquadramento aqui (isso era só para a virada costas->perfil do Hero).
+      // Desenha a partir do conjunto grosseiro que chega rápido até o conjunto fino completo
+      // terminar de extrair, mesma transição que o Hero já faz — mesmo espaço de proporção nos dois
+      // casos (ver useVideoFrames), então não há salto quando faz a troca.
       const canvas = canvasRef.current;
       const list = ready ? frames.current : coarseFrames.current;
       if (canvas && list.length) {
         const floatIndex = progress * (list.length - 1);
-        // The coarse set's frames sit far enough apart in time that cross-fading between two
-        // of them reads as a double-exposure ghost (very different poses blended together)
-        // instead of smooth motion — so while only the coarse set is available, just hold the
-        // single nearest frame with no blend. The fine set's frames are close enough together
-        // for the blend to read as motion instead, so it keeps doing that once ready.
+        // Os frames do conjunto grosseiro ficam distantes o bastante no tempo para que fazer crossfade
+        // entre dois deles pareça um fantasma de dupla exposição (poses bem diferentes misturadas)
+        // em vez de movimento suave — então enquanto só o conjunto grosseiro está disponível, apenas
+        // segura o único frame mais próximo, sem blend. Os frames do conjunto fino ficam próximos o
+        // suficiente entre si para o blend passar a sensação de movimento, então ele continua fazendo
+        // isso assim que estiver pronto.
         const indexA = ready ? Math.floor(floatIndex) : Math.round(floatIndex);
         const indexB = ready ? Math.min(indexA + 1, list.length - 1) : indexA;
         const blend = ready ? floatIndex - indexA : 0;
@@ -208,16 +217,16 @@ export function Empresas() {
         }
       }
 
-      // Screen: hidden while the lid is closed/opening (nothing to show yet), fades in
-      // right as the lid finishes opening, then the logos cross-fade within what's left
-      // of the scroll range — not the full 0..1 range like before.
+      // Tela: escondida enquanto a tampa está fechada/abrindo (nada para mostrar ainda), aparece
+      // bem quando a tampa termina de abrir, e então os logos fazem crossfade dentro do que sobra
+      // do intervalo de scroll — não o intervalo completo 0..1 como antes.
       if (screenOverlayRef.current) {
         const screenOpacity = clamp01((progress - OPEN_THRESHOLD) / SCREEN_FADE_IN);
         screenOverlayRef.current.style.opacity = screenOpacity.toFixed(3);
       }
-      // Each logo fades in, holds, then fades out before the next one starts — except the
-      // last one (Mercado Livre), which stays once it arrives instead of leaving the screen
-      // blank at the end of the scroll.
+      // Cada logo aparece, segura, e depois desaparece antes do próximo começar — exceto o
+      // último (Mercado Livre), que permanece assim que chega em vez de deixar a tela em branco no
+      // final do scroll.
       const lastLogoIndex = LOGOS.length - 1;
       logoRefs.current.forEach((el, i) => {
         if (!el) return;
@@ -227,15 +236,15 @@ export function Empresas() {
         el.style.opacity = opacity.toFixed(3);
       });
 
-      // Title: no travel, just a slow in-place fade (riseDistance 0, opacity eases across
-      // the whole window instead of a fast fraction of it) — then stays.
+      // Título: sem deslocamento, só um fade lento no lugar (riseDistance 0, a opacidade suaviza por
+      // toda a janela em vez de uma fração rápida dela) — depois permanece.
       if (titleGroupRef.current) {
         const [a, b] = TITLE_WINDOW;
         const { opacity } = animateSequentialItem(progress, a, b, Infinity, Infinity, 0, 1);
         titleGroupRef.current.style.opacity = opacity.toFixed(3);
       }
 
-      // Cards: rise in visibly, hold, then fade while drifting up — sequential.
+      // Cards: sobem visivelmente, seguram, e depois desaparecem enquanto sobem — sequencial.
       cardRefs.current.forEach((el, i) => {
         if (!el) return;
         const [a, b, c, d] = CARD_WINDOWS[i];
@@ -247,9 +256,10 @@ export function Empresas() {
     [frames, coarseFrames, ready]
   );
 
-  // Grew from 3.6 to 4.39 solely to give the logo phase more absolute scroll room — every
-  // other window above was rescaled by the same 3.6/4.39 factor so its absolute scroll timing
-  // (when the lid finishes opening, when each card enters/exits) stays exactly as it was.
+  // Cresceu de 3.6 para 4.39 unicamente para dar mais espaço de scroll absoluto à fase dos logos —
+  // todas as outras janelas acima foram reescaladas pelo mesmo fator 3.6/4.39 para que seu tempo de
+  // scroll absoluto (quando a tampa termina de abrir, quando cada card entra/sai) permaneça
+  // exatamente como era.
   useStickyScrub(containerRef, { distance: 4.39, onUpdate: render });
 
   useEffect(() => {

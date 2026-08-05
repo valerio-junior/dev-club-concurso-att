@@ -15,10 +15,10 @@ import {
   CardDescription,
 } from "./ModuloBonus.styles";
 
-// Rendered left-to-right in this order (final resting layout), but each one starts its
-// "unstacking" journey at a different moment (see UNSTACK_ORDER) — the Netflix card peels off
-// first (to the left), the cafeteria one second (to the right), and the mentoria one last,
-// settling into the gap left in the middle.
+// Renderizado da esquerda para a direita nessa ordem (layout final de repouso), mas cada um começa
+// sua jornada de "desempilhamento" em um momento diferente (ver UNSTACK_ORDER) — o card da Netflix se
+// destaca primeiro (para a esquerda), o da cafeteria em segundo (para a direita), e o de mentoria por
+// último, se acomodando na lacuna deixada no meio.
 const BONUS_ITEMS = [
   {
     id: "netflix",
@@ -26,8 +26,8 @@ const BONUS_ITEMS = [
     title: "Clone da Netflix",
     description: "Construa uma plataforma de streaming completa — catálogo, player de vídeo e login de usuários — do zero até o deploy.",
     restRotation: 0,
-    // The logo sits on the left edge of the source image — anchoring the crop there keeps it
-    // fully visible, cropping only from the right instead of trimming both sides evenly.
+    // O logo fica na borda esquerda da imagem original — ancorar o corte ali mantém ele totalmente
+    // visível, cortando só pela direita em vez de aparar os dois lados igualmente.
     imagePosition: "left center",
   },
   {
@@ -46,9 +46,9 @@ const BONUS_ITEMS = [
   },
 ];
 
-// Indices into BONUS_ITEMS, in the order each card starts peeling off the stack — matches the
-// "first one left, next one right, the other one in the middle" choreography, independent of
-// their final left-to-right reading order above.
+// Índices em BONUS_ITEMS, na ordem em que cada card começa a se destacar da pilha — corresponde à
+// coreografia "primeiro para a esquerda, o próximo para a direita, o outro no meio", independente da
+// ordem final de leitura da esquerda para a direita acima.
 const UNSTACK_ORDER = [0, 2, 1];
 
 const TITLE_WINDOW = [0, 0.09];
@@ -76,9 +76,10 @@ export function ModuloBonus() {
   const captionRefs = useRef([]);
   const centerOffsetsRef = useRef(BONUS_ITEMS.map(() => 0));
 
-  // Each card's natural resting distance from the row's own center, measured from real layout
-  // (offsetLeft/offsetWidth ignore any transform already applied) — used to pull it inward to
-  // the stack and let it back out to that exact spot, instead of guessing a fixed pixel gap.
+  // A distância natural de repouso de cada card em relação ao centro da própria fileira, medida a
+  // partir do layout real (offsetLeft/offsetWidth ignoram qualquer transform já aplicado) — usada
+  // para puxá-lo para dentro da pilha e deixá-lo voltar exatamente para esse ponto, em vez de
+  // adivinhar um espaçamento fixo em pixels.
   const measure = useCallback(() => {
     const row = rowRef.current;
     if (!row) return;
@@ -124,7 +125,7 @@ export function ModuloBonus() {
       if (!el) return;
       const unstackT = unstackTByIndex[i];
       const offset = centerOffsetsRef.current[i] || 0;
-      const x = offset * (unstackT - 1); // fully stacked (x = -offset, cancels resting offset) -> resting (x = 0)
+      const x = offset * (unstackT - 1); // totalmente empilhado (x = -offset, cancela o offset de repouso) -> em repouso (x = 0)
       const rotation = BONUS_ITEMS[i].restRotation * (1 - unstackT);
       el.style.transform = `translateX(${x.toFixed(1)}px) rotate(${rotation.toFixed(2)}deg)`;
       el.style.opacity = Math.max(unstackT, stackOpacityFallback(progress)).toFixed(3);
@@ -139,9 +140,9 @@ export function ModuloBonus() {
     });
   }, []);
 
-  // Cards are already visible (opacity driven by the row's own stack-emerge fade) before their
-  // individual unstackT starts climbing — this just keeps a card from re-fading to 0 due to
-  // its own unstackT sitting at 0 while still waiting its turn.
+  // Os cards já ficam visíveis (opacidade controlada pelo próprio fade de surgimento da pilha da
+  // fileira) antes que o unstackT individual comece a subir — isso só evita que um card volte a
+  // desaparecer para 0 por causa do próprio unstackT estar parado em 0 enquanto ainda espera sua vez.
   function stackOpacityFallback(progress) {
     return easeOutCubic(clamp01((progress - STACK_EMERGE[0]) / (STACK_EMERGE[1] - STACK_EMERGE[0])));
   }

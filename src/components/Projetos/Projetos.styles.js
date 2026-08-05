@@ -7,13 +7,13 @@ export const Wrapper = styled.section`
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Clears the fixed header (~72-84px) with margin to spare on every viewport size — the
-     previous value was tight enough that the title's own line-height clipped under it. */
+  /* Fica livre do header fixo (~72-84px) com folga em qualquer tamanho de viewport — o valor
+     anterior era justo o bastante para o próprio line-height do título ficar cortado por baixo dele. */
   padding-top: clamp(7rem, 16vh, 10rem);
   background: ${({ theme }) => theme.colors.backgroundAlt};
 `;
 
-/* Same depth-emerge language used across the site (scale + blur + fade) for the title. */
+/* Mesma linguagem de surgimento em profundidade usada em todo o site (escala + desfoque + fade) para o título. */
 export const Title = styled.h2`
   color: #ffffff;
   font-family: ${({ theme }) => theme.fonts.heading};
@@ -25,9 +25,10 @@ export const Title = styled.h2`
   will-change: opacity, transform, filter;
 `;
 
-/* Square stage sized so the whole ring (radius + image diameter) always fits inside it
-   regardless of viewport aspect ratio — width and height are capped independently by both vh
-   and vw, whichever is smaller wins, so nothing ever gets clipped by the section's own edges. */
+/* Stage quadrado dimensionado para que o anel inteiro (raio + diâmetro da imagem) sempre caiba
+   dentro dele independente da proporção do viewport — largura e altura são limitadas de forma
+   independente por vh e vw, o menor dos dois vence, para que nada seja cortado pelas próprias
+   bordas da seção. */
 export const RingStage = styled.div`
   position: relative;
   width: min(60vh, 76vw, 640px);

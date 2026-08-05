@@ -1,9 +1,9 @@
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 /**
- * Draws `image` onto the canvas context filling width/height, cropping like CSS `object-fit: cover`.
- * `zoom` (>= 1) tightens the crop around (focusX, focusY) — a digital push-in without CSS-scaling
- * the canvas element (which would blur it). `focusX`/`focusY` are 0..1 fractions of the image.
+ * Desenha `image` no contexto do canvas preenchendo width/height, cortando como o `object-fit: cover`
+ * do CSS. `zoom` (>= 1) aperta o corte em torno de (focusX, focusY) — um zoom-in digital sem escalar
+ * o elemento canvas via CSS (o que o deixaria borrado). `focusX`/`focusY` são frações 0..1 da imagem.
  */
 export function drawImageCover(ctx, image, width, height, { zoom = 1, focusX = 0.5, focusY = 0.5, clear = true } = {}) {
   const iw = image.width;
@@ -32,11 +32,12 @@ export function drawImageCover(ctx, image, width, height, { zoom = 1, focusX = 0
 }
 
 /**
- * Measures how much each frame visually changes from the next (by comparing downsampled
- * luminance), then returns a monotonic 0..1 "motion curve" — cumulative visual change up to
- * each frame index. A source clip rarely turns at a constant pace (it may hold a pose, then
- * jump); mapping scroll progress through this curve instead of raw frame index compensates
- * for that, so the on-screen motion reads as constant speed regardless of the source's pacing.
+ * Mede o quanto cada frame muda visualmente em relação ao próximo (comparando luminância
+ * reduzida), e então retorna uma "curva de movimento" monotônica 0..1 — mudança visual acumulada
+ * até cada índice de frame. Um clipe original raramente vira num ritmo constante (pode segurar uma
+ * pose, depois saltar); mapear o progresso do scroll através dessa curva em vez do índice bruto do
+ * frame compensa isso, então o movimento na tela passa a sensação de velocidade constante
+ * independente do ritmo do clipe original.
  */
 export function computeMotionCurve(frames, sampleSize = 24) {
   const canvas = document.createElement("canvas");
@@ -76,7 +77,7 @@ export function computeMotionCurve(frames, sampleSize = 24) {
   return cumulative.map((v) => v / total);
 }
 
-/** Inverse-lookup: the (possibly fractional) index in `curve` whose value equals `target`. */
+/** Busca inversa: o índice (possivelmente fracionário) em `curve` cujo valor é igual a `target`. */
 export function curveIndexAt(curve, target) {
   const n = curve.length;
   if (target <= curve[0]) return 0;

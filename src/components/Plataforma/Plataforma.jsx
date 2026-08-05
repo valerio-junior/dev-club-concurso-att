@@ -22,40 +22,43 @@ const CARDS = [
   "Conteúdos exclusivos e atualizados toda semana",
 ];
 
-// Fallback vertical distance (px) between each card's resting slot, used only until the real
-// slot spacing is measured from the rendered layout (CardsStack/CardItem heights are now
-// responsive `vh` clamps in the styles file, so a hardcoded px value would overflow on short
-// viewports — this mirrors the "measure real layout" approach used in ModuloBonus).
+// Distância vertical (px) de fallback entre cada slot de repouso dos cards, usada apenas até que o
+// espaçamento real dos slots seja medido a partir do layout renderizado (as alturas de
+// CardsStack/CardItem agora são clamps `vh` responsivos no arquivo de estilos, então um valor px
+// fixo transbordaria em viewports baixas — isso reflete a abordagem de "medir o layout real" usada
+// no ModuloBonus).
 const CARD_SLOT_FALLBACK = 110;
 
-// Text/image keep their exact same absolute scroll timing (0/28vh/59.5vh) as before — only the
-// cards' stacking/unstacking got roughly double the scroll room (entrance ~120vh->240vh,
-// collapse ~60vh->120vh), since that motion itself was reading as too fast. Distance grew from
-// 2.6 to 4.4 to fit that; everything rescaled below is just those same absolute boundaries
-// divided by the new total.
+// Texto/imagem mantêm exatamente o mesmo tempo de scroll absoluto (0/28vh/59.5vh) de antes — só o
+// empilhamento/desempilhamento dos cards ganhou aproximadamente o dobro do espaço de scroll (entrada
+// ~120vh->240vh, colapso ~60vh->120vh), já que esse movimento em si estava parecendo rápido demais.
+// A distância cresceu de 2.6 para 4.4 para caber isso; tudo que foi reescalado abaixo é só esses
+// mesmos limites absolutos divididos pelo novo total.
 const TEXT_WINDOW = [0, 0.064];
 const IMAGE_WINDOW = [0.064, 0.135];
 
-// Cards enter one at a time (each gets an equal slice of this range), then — once all four are
-// in — collapse back into a single stack from the bottom up, then fade out together.
+// Os cards entram um de cada vez (cada um recebe uma fatia igual desse intervalo), depois — assim
+// que os quatro estiverem dentro — colapsam de volta para uma única pilha de baixo para cima, e então
+// desaparecem juntos.
 const CARDS_ENTER_START = 0.135;
 const CARDS_ENTER_END = 0.68;
 const CARDS_EXIT_START = 0.68;
 const CARDS_COLLAPSE_END = 0.952;
 const CARDS_FADE_END = 1;
 
-// Depth-emerge tuning: a big scale swing (starts at half size) plus a blur-to-sharp sweep —
-// like the element is coming from far away and racking into focus, not just popping in.
+// Ajuste do "surgimento em profundidade": uma grande variação de escala (começa na metade do
+// tamanho) mais uma varredura de desfoque para nitidez — como se o elemento estivesse vindo de
+// longe e focando, não apenas surgindo de repente.
 const SCALE_START = 0.5;
 const BLUR_START_PX = 14;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-// Progress arrives imperatively from PlataformaProjetos (the shared pinned Stage hosting this
-// section together with Projetos) instead of this section pinning itself — see that component
-// for the combined scroll choreography (this section's own timing/distance is unchanged; only
-// the window-closing exit that reveals Projetos afterward lives there).
+// O progresso chega de forma imperativa a partir do PlataformaProjetos (o Stage fixado
+// compartilhado que hospeda essa seção junto com Projetos) em vez dessa seção fixar a si mesma —
+// veja aquele componente para a coreografia de scroll combinada (o tempo/distância dessa seção em
+// si não muda; só a saída de fechamento de janela que revela o Projetos depois fica lá).
 export const Plataforma = forwardRef(function Plataforma(_props, ref) {
   const descRef = useRef(null);
   const stageRef = useRef(null);
@@ -63,9 +66,10 @@ export const Plataforma = forwardRef(function Plataforma(_props, ref) {
   const cardRefs = useRef([]);
   const slotRef = useRef(CARD_SLOT_FALLBACK);
 
-  // Slot spacing = (stack height - one card's own height) / (n - 1), so the last card's bottom
-  // edge lands exactly at the stack's bottom edge — measured from the real rendered sizes
-  // instead of assuming a fixed px value, since both are now responsive `vh` clamps.
+  // Espaçamento do slot = (altura da pilha - altura do próprio card) / (n - 1), para que a borda
+  // inferior do último card caia exatamente na borda inferior da pilha — medido a partir dos
+  // tamanhos reais renderizados em vez de assumir um valor px fixo, já que ambos agora são clamps
+  // `vh` responsivos.
   useEffect(() => {
     const measure = () => {
       const stackHeight = cardsStackRef.current?.offsetHeight;
@@ -96,14 +100,14 @@ export const Plataforma = forwardRef(function Plataforma(_props, ref) {
       stageRef.current.style.filter = `blur(${(BLUR_START_PX * (1 - t)).toFixed(2)}px)`;
     }
 
-    // Entrance: each card gets an equal, sequential slice of the enter range — one at a time,
-    // sliding down from slot 0 (on top of the pile) to its own resting slot i.
+    // Entrada: cada card recebe uma fatia igual e sequencial do intervalo de entrada — um de cada vez,
+    // deslizando do slot 0 (no topo da pilha) até seu próprio slot de repouso i.
     const n = CARDS.length;
     const enterSlice = (CARDS_ENTER_END - CARDS_ENTER_START) / n;
 
-    // Exit: a single shared "collapsing front" descends from slot (n-1) to slot 0 — each card
-    // sits still at its own slot until the front reaches it, then rides it down the rest of the
-    // way, which is what makes already-collapsed cards continue moving together as one group.
+    // Saída: uma única "frente de colapso" compartilhada desce do slot (n-1) até o slot 0 — cada card
+    // fica parado no seu próprio slot até a frente alcançá-lo, e então acompanha o resto do caminho
+    // para baixo, o que é o que faz os cards já colapsados continuarem se movendo juntos como um grupo.
     const collapseT = easeOutCubic(clamp01((progress - CARDS_EXIT_START) / (CARDS_COLLAPSE_END - CARDS_EXIT_START)));
     const front = (n - 1) * (1 - collapseT);
     const fadeT = clamp01((progress - CARDS_COLLAPSE_END) / (CARDS_FADE_END - CARDS_COLLAPSE_END));
@@ -117,8 +121,8 @@ export const Plataforma = forwardRef(function Plataforma(_props, ref) {
         const cardStart = CARDS_ENTER_START + i * enterSlice;
         const cardEnd = cardStart + enterSlice;
         const t = easeOutCubic(clamp01((progress - cardStart) / (cardEnd - cardStart)));
-        // Travels only from the previous card's slot (i-1) to its own (i) — not all the way
-        // from slot 0 — so each card visibly emerges from the one right before it.
+        // Percorre apenas do slot do card anterior (i-1) até o próprio (i) — não do slot 0 inteiro —
+        // para que cada card visivelmente surja daquele logo antes dele.
         slot = Math.max(0, i - 1) + (i === 0 ? 0 : t);
         opacity = t;
       } else {

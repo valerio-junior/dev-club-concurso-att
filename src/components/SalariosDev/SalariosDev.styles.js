@@ -8,7 +8,7 @@ export const Wrapper = styled.section`
   padding: clamp(5rem, 12vh, 8rem) clamp(1.5rem, 6vw, 6rem);
 `;
 
-/* Same fade-up entrance as Certificados — no pin, no scroll-scrub. */
+/* Mesma entrada de fade-up do Certificados — sem pin, sem scroll-scrub. */
 export const Inner = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -85,8 +85,8 @@ export const ValueSuffix = styled.span`
   margin-left: 0.15rem;
 `;
 
-/* Track + animated fill, same visual language as the reference: a thin rounded bar under the
-   number whose fill width grows in sync with the count-up. */
+/* Track + preenchimento animado, mesma linguagem visual da referência: uma barra fina e arredondada
+   sob o número, cuja largura de preenchimento cresce em sincronia com a contagem. */
 export const BarTrack = styled.div`
   position: relative;
   height: 6px;

@@ -19,8 +19,8 @@ export const Inner = styled.div`
   padding: 0 clamp(1.5rem, 6vw, 6rem);
 `;
 
-/* Title + description sit absolutely centered, independent of the row below, so they can
-   occupy the exact same spot the cards later settle into without pushing anything around. */
+/* Título + descrição ficam centralizados de forma absoluta, independente da fileira abaixo, para que
+   possam ocupar exatamente o mesmo lugar onde os cards depois vão se acomodar, sem empurrar nada. */
 export const TitleGroup = styled.div`
   position: absolute;
   top: 50%;

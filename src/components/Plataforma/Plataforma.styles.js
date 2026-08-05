@@ -31,9 +31,9 @@ export const LeftCol = styled.div`
   }
 `;
 
-/* "Emerges from depth" — starts smaller and transparent, grows to full size/opacity — the
-   mirror of how the previous section's notebook shrinks-and-fades away at its end, reused here
-   as an entrance instead of an exit. */
+/* "Surge da profundidade" — começa menor e transparente, cresce até o tamanho/opacidade total — o
+   espelho de como o notebook da seção anterior encolhe e desaparece no final, reaproveitado aqui
+   como uma entrada em vez de uma saída. */
 export const Description = styled.h2`
   color: #ffffff;
   font-family: ${({ theme }) => theme.fonts.heading};
@@ -59,7 +59,7 @@ export const RightCol = styled.div`
   }
 `;
 
-/* Same depth-emerge treatment as Description, staggered to start once the text is fully in. */
+/* Mesmo tratamento de surgimento em profundidade do Description, escalonado para começar assim que o texto estiver totalmente dentro. */
 export const PlatformStage = styled.div`
   position: relative;
   width: 100%;
@@ -78,9 +78,9 @@ export const PlatformImage = styled.img`
   display: block;
 `;
 
-/* Fixed-height slot list — children (CardItem) are absolutely positioned and moved via JS
-   (translateY in px, matching CARD_SLOT in Plataforma.jsx), so the container needs an explicit
-   height instead of relying on normal document flow. */
+/* Lista de slots de altura fixa — os filhos (CardItem) são posicionados de forma absoluta e movidos via JS
+   (translateY em px, correspondendo ao CARD_SLOT em Plataforma.jsx), então o container precisa de uma
+   altura explícita em vez de depender do fluxo normal do documento. */
 export const CardsStack = styled.div`
   position: relative;
   margin-top: clamp(1.5rem, 3vw, 2.25rem);

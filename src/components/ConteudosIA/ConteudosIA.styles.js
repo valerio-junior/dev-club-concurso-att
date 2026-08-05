@@ -1,9 +1,9 @@
 import styled, { keyframes } from "styled-components";
 
-/* Absolutely positioned, stacked underneath Formacoes inside the shared pinned Stage (see
-   FormacoesConteudosIA) — this section is already present and animating while Formações'
-   last card is still finishing its exit on top of it, instead of only starting once
-   Formações is completely done. */
+/* Posicionado de forma absoluta, empilhado por baixo do Formacoes dentro do Stage fixado
+   compartilhado (ver FormacoesConteudosIA) — essa seção já está presente e animando enquanto o
+   último card do Formações ainda está terminando de sair por cima dela, em vez de só começar
+   quando o Formações estiver completamente terminado. */
 export const Wrapper = styled.section`
   position: absolute;
   inset: 0;
@@ -35,9 +35,9 @@ export const LeftCol = styled.div`
   }
 `;
 
-/* Holds the first Description in normal flow (so IconRow's margin-top still measures from it)
-   while DescriptionOverlay sits absolutely on top of it, at the same size/position, for the
-   crossfade between the two descriptions. */
+/* Mantém a primeira Description no fluxo normal (para que o margin-top do IconRow ainda seja
+   medido a partir dela) enquanto o DescriptionOverlay fica posicionado de forma absoluta por cima
+   dela, no mesmo tamanho/posição, para o crossfade entre as duas descrições. */
 export const DescriptionStack = styled.div`
   position: relative;
 `;
@@ -48,8 +48,9 @@ export const Description = styled.p`
   font-weight: 600;
   font-size: clamp(1.5rem, 2.6vw, 2.2rem);
   line-height: 1.35;
-  /* Balances line lengths across wraps (never splits a word — a whole word that doesn't fit
-     just moves entirely to the next line) instead of leaving a much shorter last line. */
+  /* Equilibra o comprimento das linhas nas quebras (nunca separa uma palavra — uma palavra inteira
+     que não cabe simplesmente vai toda para a próxima linha) em vez de deixar uma última linha bem
+     mais curta. */
   text-wrap: balance;
   opacity: 0;
   will-change: opacity, transform;
@@ -75,9 +76,9 @@ const shineSweep = keyframes`
   100% { transform: translateX(120%); }
 `;
 
-/* Most icons sit on the shared neutral badge; a few (brand-accurate ones like Gemini/Claude/
-   Meta AI) pass their own $background gradient instead, matching their real app-icon look —
-   those also drop the neutral border, which would otherwise show up oddly against a color. */
+/* A maioria dos ícones fica sobre o badge neutro compartilhado; alguns (fiéis à marca, como
+   Gemini/Claude/Meta AI) passam seu próprio gradiente $background, batendo com a aparência real do
+   ícone do app — esses também descartam a borda neutra, que ficaria estranha em cima de uma cor. */
 export const IconWrap = styled.div`
   position: relative;
   width: clamp(52px, 4.4vw, 68px);

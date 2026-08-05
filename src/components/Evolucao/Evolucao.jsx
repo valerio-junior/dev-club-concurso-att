@@ -78,13 +78,13 @@ const IconBriefcase = () => (
   </svg>
 );
 
-// Every coordinate here (node x/y, path d) shares one coordinate space (0..100 wide,
-// 0..VIEWBOX_H tall) with the SVG's viewBox, so the drawn line is guaranteed to pass exactly
-// through each node's center instead of just tracking near it. Tightened from 100-unit to
-// 70-unit gaps between stops (and Track's min-height scaled down to match) so less scroll is
-// needed between each one.
-// Tail past the last stop trimmed further (was leaving a big empty gap before the laptop) —
-// see the Connector element for how it bridges the rest of the way in.
+// Cada coordenada aqui (x/y do nó, d do path) compartilha o mesmo espaço de coordenadas
+// (largura 0..100, altura 0..VIEWBOX_H) com o viewBox do SVG, então a linha desenhada tem
+// garantia de passar exatamente pelo centro de cada nó, em vez de só passar perto. Reduzido
+// de espaçamentos de 100 unidades para 70 unidades entre as paradas (e a altura mínima do
+// Track escalada para acompanhar), para precisar de menos scroll entre cada uma.
+// A ponta depois da última parada foi cortada ainda mais (deixava um vão vazio grande antes
+// do notebook) — veja o elemento Connector para ver como ele preenche o resto do caminho.
 const VIEWBOX_H = 340;
 
 const STOPS = [
@@ -137,21 +137,23 @@ const STOPS = [
   },
 ];
 
-// Starts dead-center (x 50) at the very top, then curves out to reach the first stop.
+// Começa bem no centro (x 50) lá no topo, depois curva para alcançar a primeira parada.
 const LINE_PATH =
   "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110 C 70 135, 30 155, 30 180 C 30 205, 70 225, 70 250 C 70 275, 30 295, 30 320 C 30 328, 50 330, 50 335";
 
-// The color swap + card reveal happen over a short window of overall progress right as the
-// drawn line reaches that stop's point along the path — not an instant snap, but quick enough
-// to read as "arriving there", and the card follows a beat behind for a natural stagger.
+// A troca de cor + revelação do card acontecem numa janela curta do progresso geral, bem
+// quando a linha desenhada alcança o ponto daquela parada ao longo do path — não é um corte
+// instantâneo, mas rápido o suficiente para passar a sensação de "chegou ali", e o card segue
+// um instante depois para um stagger natural.
 const COLOR_WINDOW = 0.025;
 const CARD_WINDOW = 0.05;
 
-// Laptop-block progress phases: connector draws in first, then the message types inside the
-// compose bar, then "sends" (compose clears, bubble takes over in the chat), then read ticks.
-// Rescaled by 200/240 from their original 0/0.1/0.7/0.8/0.9 values (distance grew from 2 to
-// 2.4) so every one of these keeps the exact same *absolute* scroll timing as before — only
-// the shrink phase at the end got more room, by extending into that new distance.
+// Fases de progresso do bloco do notebook: o conector desenha primeiro, depois a mensagem
+// é digitada dentro da barra de composição, depois "envia" (a barra de composição limpa, a
+// bolha assume no chat), depois os tiques de leitura. Reescalado por 200/240 a partir dos
+// valores originais 0/0.1/0.7/0.8/0.9 (a distância cresceu de 2 para 2.4) para que cada uma
+// dessas fases mantenha exatamente o mesmo tempo de scroll *absoluto* de antes — só a fase
+// de encolhimento no final ganhou mais espaço, se estendendo por essa nova distância.
 const CONNECTOR_END = 0.083;
 const TYPE_START = 0.083;
 const TYPE_END = 0.583;
@@ -159,19 +161,21 @@ const SEND_START = 0.583;
 const SEND_END = 0.667;
 const SENT_START = 0.667;
 const SENT_END = 0.75;
-// After the message is sent and read, the notebook itself (image + WhatsApp UI together)
-// shrinks toward center and fades out — stretched to 3x its previous scroll length (was
-// 20% of distance 2 = 20vh, now 25% of distance 2.4 = 60vh) so it's actually visible
-// happening, not a quick blink, before releasing into the next section.
+// Depois que a mensagem é enviada e lida, o próprio notebook (imagem + UI do WhatsApp juntos)
+// encolhe em direção ao centro e desaparece — esticado para 3x o comprimento de scroll
+// anterior (era 20% da distância 2 = 20vh, agora 25% da distância 2.4 = 60vh) para que
+// realmente dê para ver acontecendo, sem ser um piscar rápido, antes de liberar para a
+// próxima seção.
 const SHRINK_START = 0.75;
 const SHRINK_END = 1;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-// Measures how far along the *full* path a given sub-path (the same d string, truncated right
-// after a stop's point) reaches, as a 0..1 fraction of the full path's length — this is what
-// lets the color-change/card-reveal timing line up exactly with the visible drawing line.
+// Mede o quanto, ao longo do path *completo*, um determinado sub-path (a mesma string d,
+// truncada logo após o ponto de uma parada) alcança, como uma fração 0..1 do comprimento
+// total do path — é isso que permite que o tempo de troca de cor/revelação do card se alinhe
+// exatamente com a linha visível sendo desenhada.
 function measureStopProgress(fullPath, subPathD) {
   const totalLength = fullPath.getTotalLength();
   const temp = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -209,7 +213,7 @@ export function Evolucao() {
     const offset = (totalLength * (1 - progress)).toFixed(2);
 
     path.style.strokeDashoffset = offset;
-    // Same `d` as the main path, so it shares the exact same length — drawn in lockstep.
+    // Mesmo `d` do path principal, então compartilha exatamente o mesmo comprimento — desenhado em sincronia.
     if (haloPathRef.current) haloPathRef.current.style.strokeDashoffset = offset;
 
     const tipPoint = path.getPointAtLength(totalLength * progress);
@@ -253,8 +257,8 @@ export function Evolucao() {
       haloPathRef.current.style.strokeDashoffset = `${totalLength}`;
     }
 
-    // Precompute exactly where along the path (as a progress fraction) each stop's point
-    // sits, by measuring a truncated copy of the same path string up to that point.
+    // Pré-calcula exatamente onde ao longo do path (como uma fração de progresso) o ponto de
+    // cada parada fica, medindo uma cópia truncada da mesma string do path até aquele ponto.
     const cutPoints = [
       "M 50 0 C 50 20, 30 20, 30 40",
       "M 50 0 C 50 20, 30 20, 30 40 C 30 65, 70 85, 70 110",
@@ -278,14 +282,14 @@ export function Evolucao() {
   }, [render]);
 
   const renderLaptop = useCallback((progress) => {
-    // Connector draws in first, as a continuation of the Track's line, before anything else.
+    // Conector desenha primeiro, como uma continuação da linha do Track, antes de qualquer outra coisa.
     if (connectorRef.current) {
       const connectorT = easeOutCubic(clamp01(progress / CONNECTOR_END));
       connectorRef.current.style.transform = `scaleY(${connectorT.toFixed(3)})`;
       connectorRef.current.style.opacity = connectorT > 0.02 ? "1" : "0";
     }
 
-    // Message types letter-by-letter inside the compose bar.
+    // Mensagem é digitada letra por letra dentro da barra de composição.
     const chars = charsRef.current;
     const total = chars.length;
     const typeT = clamp01((progress - TYPE_START) / (TYPE_END - TYPE_START));
@@ -294,7 +298,7 @@ export function Evolucao() {
       el.style.opacity = i < visibleCount ? "1" : "0";
     });
 
-    // Then "sends": compose bar's text clears out while the real chat bubble takes over.
+    // Depois "envia": o texto da barra de composição some enquanto a bolha real do chat assume.
     const sendT = easeOutCubic(clamp01((progress - SEND_START) / (SEND_END - SEND_START)));
     if (composeInputRef.current) composeInputRef.current.style.opacity = (1 - sendT).toFixed(3);
     if (bubbleRef.current) {
@@ -307,8 +311,8 @@ export function Evolucao() {
       ticksRef.current.style.opacity = sentT.toFixed(3);
     }
 
-    // Finally, the notebook itself shrinks toward center and fades out, before this section
-    // releases into whatever comes next.
+    // Por fim, o próprio notebook encolhe em direção ao centro e desaparece, antes que essa
+    // seção libere para o que vem a seguir.
     if (laptopStageRef.current) {
       const shrinkT = easeOutCubic(clamp01((progress - SHRINK_START) / (SHRINK_END - SHRINK_START)));
       laptopStageRef.current.style.transform = `scale(${(1 - shrinkT).toFixed(3)})`;

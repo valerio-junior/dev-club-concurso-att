@@ -30,7 +30,7 @@ const CHECKLIST = [
   "Profissional fullstack te auxiliando da construção ao deploy",
 ];
 
-// Inner ring — closer to the brain, one badge per teacher.
+// Anel interno — mais próximo do cérebro, um badge por professor.
 const TEACHERS = [
   { id: "rodolfo", img: "/assets/professores/rodolfo-ceo.jpg" },
   { id: "fernanda", img: "/assets/professores/fernanda-mentora.jpg" },
@@ -39,7 +39,7 @@ const TEACHERS = [
   { id: "mateus", img: "/assets/professores/mateus-ia.jpg" },
 ];
 
-// Outer ring — AI tools mixed with core tech, further from the brain.
+// Anel externo — ferramentas de IA misturadas com tecnologias principais, mais distante do cérebro.
 const ICONS = [
   "/assets/logos/ai/gemini.svg",
   "/assets/logos/ai/chatgpt.svg",
@@ -56,7 +56,7 @@ const ICONS = [
   "/assets/logos/tech/github.svg",
 ].map((src, i) => ({ id: `icon-${i}`, src }));
 
-// One brand-ish accent color per icon, same order as ICONS — used for its hover border/glow.
+// Uma cor de destaque (estilo marca) por ícone, na mesma ordem de ICONS — usada na borda/brilho do hover.
 const ICON_COLORS = [
   "#8B5CF6", // Gemini
   "#10A37F", // ChatGPT
@@ -73,47 +73,47 @@ const ICON_COLORS = [
   "#8250DF", // GitHub
 ];
 
-// Teachers don't have a "brand color" of their own, so they all share this one consistent
-// accent (the site's usual blue) for their hover border/glow.
+// Os professores não têm uma "cor de marca" própria, então todos compartilham esse mesmo
+// tom (o azul padrão do site) para a borda/brilho do hover.
 const TEACHER_HOVER_COLOR = "#60A5FA";
 
-// Hover/repel reacts within this distance (px) of either the badge itself or its wire — no
-// need to land exactly on it. Repulsion pushes up to this many px away from the cursor,
-// strongest right up close and fading out toward the edge of that radius.
+// O hover/repulsão reage dentro dessa distância (px) tanto do badge quanto do fio dele — não
+// precisa acertar exatamente em cima. A repulsão empurra até essa quantidade de px para longe
+// do cursor, mais forte bem de perto e enfraquecendo até a borda desse raio.
 const HOVER_RADIUS = 70;
 const MAX_PUSH = 26;
-// How quickly the push (and its release back to resting position) eases toward its target
-// each frame — higher reacts faster, lower feels floatier.
+// Com que velocidade o empurrão (e o retorno à posição de repouso) se aproxima do alvo a
+// cada frame — quanto maior, mais rápido reage; quanto menor, mais "flutuante" fica.
 const PUSH_EASE = 0.18;
 
 const INNER_RADIUS_RATIO = 0.27;
 const OUTER_RADIUS_RATIO = 0.47;
 
-// Every node — teacher or icon — connects to the brain with its own straight, direct line
-// (no routing through anyone else), matching the reference: a clean radial web, not a tangle.
-// Only the icon wires carry energy particles, though — a brisk flight once released.
+// Cada nó — professor ou ícone — se conecta ao cérebro com sua própria linha reta e direta
+// (sem passar por nenhum outro), igual à referência: uma teia radial limpa, sem emaranhados.
+// Só os fios dos ícones carregam partículas de energia, porém — um voo rápido assim que liberadas.
 const INBOUND_DURATION = 2.4;
 
-// Icons release in small staggered bursts (2, then 1, then 1, then 2, ...) instead of an
-// evenly-spaced continuous stream, so arrivals read as distinct little waves rather than
-// everything moving constantly at once. Must sum to ICONS.length (13).
+// Os ícones são liberados em pequenas rajadas escalonadas (2, depois 1, depois 1, depois 2, ...)
+// em vez de um fluxo contínuo e uniformemente espaçado, para que as chegadas pareçam pequenas
+// ondas distintas em vez de tudo se movendo o tempo todo. A soma precisa dar ICONS.length (13).
 const RELEASE_GROUPS = [2, 1, 1, 2, 1, 2, 1, 1, 2];
-const GROUP_GAP = 0.6; // seconds between the start of each burst
+const GROUP_GAP = 0.6; // segundos entre o início de cada rajada
 const RELEASE_OFFSETS = RELEASE_GROUPS.flatMap((count, groupIndex) => Array(count).fill(groupIndex * GROUP_GAP));
 const CYCLE_LENGTH = RELEASE_GROUPS.length * GROUP_GAP;
 
-// A handful of varied "energy" colors cycled across the wires instead of one flat color, so
-// the whole network reads as richer/more alive.
+// Um punhado de cores de "energia" variadas alternadas nos fios em vez de uma cor única,
+// para que a rede inteira pareça mais rica/viva.
 const PARTICLE_COLORS = ["#7ecbff", "#ffd166", "#ff9f5a", "#a78bfa", "#6ee7b7", "#ff8fb1"];
 
-// How much the brain's core should still be lit up from an arrival, per frame it's not
-// actively refreshed — this is what turns individual arrivals into a smooth, decaying pulse
-// rather than an on/off flicker.
+// O quanto o núcleo do cérebro deve continuar aceso após uma chegada, a cada frame em que não
+// é reativado — é isso que transforma chegadas individuais em um pulso suave e decrescente,
+// em vez de um piscar liga/desliga.
 const CORE_DECAY = 0.95;
 
-// Continuous ambient orbiting — icons drift counter-clockwise ("left"), teacher photos drift
-// clockwise ("right"), opposite directions, both slow enough to read as ambient rather than
-// distracting. Degrees per second.
+// Órbita ambiente contínua — os ícones giram no sentido anti-horário ("esquerda"), as fotos
+// dos professores giram no sentido horário ("direita"), direções opostas, ambas lentas o
+// suficiente para parecerem ambientes e não distrativas. Graus por segundo.
 const ICON_ROTATION_SPEED = 5;
 const TEACHER_ROTATION_SPEED = -5;
 
@@ -121,8 +121,8 @@ function angleFor(i, count) {
   return (i / count) * 360 - 90;
 }
 
-// Shortest distance from point `p` to the segment a->b — used so hovering anywhere along a
-// wire counts as being "near" its badge, not just the badge itself.
+// Menor distância do ponto `p` até o segmento a->b — usada para que passar o mouse em
+// qualquer ponto do fio conte como estar "perto" do badge, não só do badge em si.
 function distanceToSegment(p, a, b) {
   const abx = b.x - a.x;
   const aby = b.y - a.y;
@@ -205,9 +205,10 @@ export function Professores() {
     [center, outerRadius]
   );
 
-  // Drives every energy particle (and the brain's core glow) each frame — plain
-  // requestAnimationFrame (not scroll-linked), matching how the rest of this section behaves
-  // like a living scene instead of a scrubbed sequence. Only runs once actually visible.
+  // Move cada partícula de energia (e o brilho do núcleo do cérebro) a cada frame — usando um
+  // requestAnimationFrame comum (não vinculado ao scroll), do mesmo jeito que o resto dessa seção
+  // se comporta como uma cena viva em vez de uma sequência controlada pelo scroll. Só roda
+  // quando de fato está visível.
   useEffect(() => {
     if (!visible) return undefined;
     let raf;
@@ -221,10 +222,10 @@ export function Professores() {
 
       const mouse = mouseRef.current;
 
-      // Teachers continuously orbit — each frame recomputes its live angle, then updates its
-      // own wire (line endpoint) and badge position to match, so the wire always stays
-      // attached to the photo instead of the photo drifting away from it. Getting the cursor
-      // near either one (badge or wire) makes it dodge away and light up.
+      // Os professores orbitam continuamente — cada frame recalcula o ângulo atual e então
+      // atualiza o próprio fio (ponto final da linha) e a posição do badge para acompanhar,
+      // assim o fio sempre fica preso à foto em vez da foto se afastar dele. Aproximar o cursor
+      // de qualquer um dos dois (badge ou fio) faz com que ele se desvie e acenda.
       TEACHERS.forEach((_, i) => {
         const angleDeg = angleFor(i, TEACHERS.length) + teacherRotation;
         const rad = (angleDeg * Math.PI) / 180;
@@ -269,10 +270,10 @@ export function Professores() {
         }
       });
 
-      // Icons orbit the opposite direction, same idea for their own wire + badge — and their
-      // inbound energy particle rides this exact same live position, so it's always departing
-      // from wherever the icon currently is, not a stale starting point. Same hover/dodge
-      // treatment as the teachers above.
+      // Os ícones orbitam na direção oposta, com a mesma lógica para o próprio fio + badge — e a
+      // partícula de energia que chega usa exatamente essa mesma posição atual, então ela sempre
+      // parte de onde o ícone está de fato, não de um ponto de partida desatualizado. Mesmo
+      // tratamento de hover/desvio dos professores acima.
       ICONS.forEach((_, i) => {
         const angleDeg = angleFor(i, ICONS.length) + iconRotation;
         const rad = (angleDeg * Math.PI) / 180;
@@ -316,9 +317,9 @@ export function Professores() {
           badgeEl.style.boxShadow = isHover ? `0 8px 22px rgba(0, 0, 0, 0.45), 0 0 20px 6px ${color}` : "0 8px 22px rgba(0, 0, 0, 0.45)";
         }
 
-        // Every icon's own energy travels straight to the brain along its own direct line,
-        // but only during its own release window (see RELEASE_OFFSETS) — outside of that
-        // window it's idle and invisible, waiting for its next burst to come around.
+        // A energia de cada ícone viaja em linha reta até o cérebro pela sua própria linha direta,
+        // mas apenas durante sua própria janela de liberação (ver RELEASE_OFFSETS) — fora dessa
+        // janela ela fica parada e invisível, esperando a próxima rajada chegar.
         const el = inboundParticleRefs.current[i];
         const localT = ((t - RELEASE_OFFSETS[i]) % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH;
         const traveling = localT < INBOUND_DURATION;
@@ -327,27 +328,27 @@ export function Professores() {
           return;
         }
 
-        const progress = localT / INBOUND_DURATION; // 0 -> 1 across the flight
-        const travel = 1 - progress; // 1 -> 0: starts at the icon, arrives at the brain
+        const progress = localT / INBOUND_DURATION; // 0 -> 1 ao longo do voo
+        const travel = 1 - progress; // 1 -> 0: começa no ícone, chega ao cérebro
         if (travel < 0.12) arrivalEnergy = Math.max(arrivalEnergy, 1 - travel / 0.12);
         if (!el) return;
         const px = center + (x - center) * travel;
         const py = center + (y - center) * travel;
-        // Set directly as SVG attributes (not a CSS transform on a separate HTML element) —
-        // same coordinate space as the <line> it's supposed to be riding, so it's physically
-        // impossible for it to drift off that line.
+        // Definido diretamente como atributos SVG (não um transform CSS em um elemento HTML
+        // separado) — mesmo espaço de coordenadas da <line> que deveria estar seguindo, então é
+        // fisicamente impossível ela sair dessa linha.
         el.setAttribute("cx", px.toFixed(1));
         el.setAttribute("cy", py.toFixed(1));
-        // Fades in right as it's released and fades out over the final stretch of the
-        // approach, right as it reaches the core — reads as being absorbed, not just stopping.
+        // Aparece suavemente assim que é liberada e desaparece no trecho final da aproximação,
+        // bem quando chega ao núcleo — passa a impressão de ser absorvida, não de simplesmente parar.
         let opacity = 1;
         if (progress < 0.08) opacity = progress / 0.08;
         else if (progress > 0.85) opacity = 1 - (progress - 0.85) / 0.15;
         el.style.opacity = opacity.toFixed(2);
       });
 
-      // The brain's core glow brightens as energy arrives and eases back down otherwise —
-      // decaying rather than snapping keeps it reading as a pulse, not a flicker.
+      // O brilho do núcleo do cérebro aumenta conforme a energia chega e diminui suavemente
+      // caso contrário — decair em vez de cortar de uma vez mantém a sensação de pulso, não de piscar.
       coreEnergyRef.current = Math.max(arrivalEnergy, coreEnergyRef.current * CORE_DECAY);
       if (coreRef.current) {
         const e = coreEnergyRef.current;
@@ -401,8 +402,8 @@ export function Professores() {
                   strokeWidth="1"
                 />
               ))}
-              {/* Every icon gets its own straight, direct line to the brain — same as the
-                  teachers above, no routing through anyone else. */}
+              {/* Cada ícone tem sua própria linha reta e direta até o cérebro — igual aos
+                  professores acima, sem passar por mais ninguém. */}
               {outerPositions.map((pos, i) => (
                 <line
                   key={`outer-line-${i}`}
@@ -416,8 +417,8 @@ export function Professores() {
                 />
               ))}
 
-              {/* Riding the exact same coordinate space as the lines above, instead of a
-                  separately-positioned HTML element that could drift out of sync with them. */}
+              {/* Usa exatamente o mesmo espaço de coordenadas das linhas acima, em vez de um
+                  elemento HTML posicionado separadamente que poderia sair de sincronia com elas. */}
               {outerPositions.map((_, i) => {
                 const color = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
                 return (

@@ -6,14 +6,14 @@ const SHIELD_SRC = "/assets/garantia/escudo-garantia.png";
 
 const DISTANCE = 2.2;
 
-// Shield rises and settles into place first; only once it's fully arrived does the text start
-// rising in — sequential, not overlapping — then both hold still for the remaining scroll room
-// before the section unpins.
+// O escudo sobe e se acomoda no lugar primeiro; só depois que ele chega totalmente é que o texto
+// começa a subir — sequencial, não sobreposto — depois os dois ficam parados pelo resto do espaço
+// de scroll antes da seção soltar o pin.
 const SHIELD_WINDOW = [0, 0.55];
 const TEXT_WINDOW = [0.55, 0.85];
 
-// How far below the section (in vh) each element starts — large enough that, combined with the
-// Wrapper's overflow:hidden, both are fully off-screen at progress 0.
+// A que distância abaixo da seção (em vh) cada elemento começa — grande o suficiente para que,
+// combinado com o overflow:hidden do Wrapper, ambos fiquem totalmente fora da tela no progresso 0.
 const SHIELD_START_VH = 70;
 const TEXT_START_VH = 55;
 

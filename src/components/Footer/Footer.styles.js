@@ -8,9 +8,9 @@ export const Wrapper = styled.footer`
   padding: clamp(2.25rem, 4vh, 3rem) clamp(1.5rem, 5vw, 4rem);
 `;
 
-/* Logo | nav | social icons — the outer two columns share the same width (1fr each), so the
-   same horizontal padding gives the logo and the icons matching margins on either edge, with
-   the nav centered in the middle column regardless of how wide the other two end up being. */
+/* Logo | nav | ícones sociais — as duas colunas externas compartilham a mesma largura (1fr cada), então
+   o mesmo padding horizontal dá margens equivalentes para o logo e os ícones em cada borda, com
+   o nav centralizado na coluna do meio independente de quão largas as outras duas acabem ficando. */
 export const Row = styled.div`
   display: grid;
   grid-template-columns: 1fr auto 1fr;

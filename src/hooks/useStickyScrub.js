@@ -2,12 +2,13 @@ import { useLayoutEffect, useRef } from "react";
 import { gsap, ScrollTrigger } from "../lib/gsap";
 
 /**
- * Pins `containerRef` and drives a 0..1 progress value from scroll while pinned,
- * unpinning automatically once the scroll distance is consumed. This is the shared
- * "sticky scene" pattern reused across sections (Hero, Empresas, IA, Professores...).
+ * Fixa `containerRef` e controla um valor de progresso 0..1 a partir do scroll enquanto fixado,
+ * soltando automaticamente assim que a distância de scroll é consumida. Esse é o padrão
+ * compartilhado de "cena grudenta" reaproveitado em várias seções (Hero, Empresas, IA,
+ * Professores...).
  *
- * `distance` controls how much scroll is needed to go from progress 0 to 1,
- * expressed as a multiple of the viewport height (e.g. 1.5 = 150vh of scroll).
+ * `distance` controla quanto scroll é necessário para ir do progresso 0 a 1,
+ * expresso como um múltiplo da altura do viewport (ex: 1.5 = 150vh de scroll).
  */
 export function useStickyScrub(containerRef, { distance = 1.5, onUpdate, disabled = false, progressRef } = {}) {
   const onUpdateRef = useRef(onUpdate);

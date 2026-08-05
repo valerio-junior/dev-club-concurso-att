@@ -35,7 +35,7 @@ export const TextColumn = styled.div`
   }
 `;
 
-/* Wraps the eyebrow + title so they rise and fade in together as a single block. */
+/* Envolve o eyebrow + título para que subam e apareçam com fade juntos como um único bloco. */
 export const TitleGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -85,8 +85,9 @@ export const Card = styled.p`
   will-change: opacity, transform;
 `;
 
-/* The generated clip renders at 16:9 (the model reframes any input to this ratio),
-   so the stage matches it exactly — no cropping, keeps the screen-overlay math exact. */
+/* O clipe gerado renderiza em 16:9 (o modelo reenquadra qualquer entrada nessa proporção),
+   então o stage bate exatamente com isso — sem corte, mantendo a matemática do screen-overlay
+   exata. */
 export const NotebookStage = styled.div`
   position: relative;
   width: min(62%, 860px);
@@ -117,8 +118,8 @@ export const NotebookCanvas = styled.canvas`
   }
 `;
 
-/* Fades the canvas edges into the page background, same technique as the Hero video,
-   so the scene reads as part of the page instead of a boxed-in image/div. */
+/* Esmaece as bordas do canvas no fundo da página, mesma técnica do vídeo do Hero,
+   para que a cena pareça parte da página em vez de uma imagem/div encaixotada. */
 export const Vignette = styled.div`
   position: absolute;
   inset: 0;
@@ -130,10 +131,10 @@ export const Vignette = styled.div`
   );
 `;
 
-/* Positioned over the blank screen area of the generated clip once the lid is open
-   (measured as percentages, so it scales with the video at any size). Horizontal centering
-   and size confirmed good from a user screenshot; nudged up slightly this round for full
-   centering. Starts hidden (lid closed). */
+/* Posicionado sobre a área de tela em branco do clipe gerado assim que a tampa está aberta
+   (medido em porcentagens, para escalar junto com o vídeo em qualquer tamanho). Centralização
+   horizontal e tamanho confirmados como bons a partir de um screenshot do usuário; deslocado um
+   pouco para cima nessa rodada para centralização completa. Começa escondido (tampa fechada). */
 export const ScreenOverlay = styled.div`
   position: absolute;
   left: 27%;

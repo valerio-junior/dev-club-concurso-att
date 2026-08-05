@@ -11,37 +11,38 @@ const PROJECTS = [
   "/assets/projetos/projeto-6.jpg",
 ];
 
-// Title depth-emerges first, then the ring starts forming (one project locking in at a time),
-// and once all six are in place it keeps spinning for one full extra lap before the section
-// lets go of scroll.
+// O título surge em profundidade primeiro, depois o anel começa a se formar (um projeto se
+// encaixando de cada vez), e assim que os seis estiverem no lugar ele continua girando por uma
+// volta extra completa antes da seção soltar o scroll.
 const TITLE_WINDOW = [0, 0.1];
 const RING_START = 0.1;
 const FORM_END = 0.65;
 const SPIN_END = 1;
 
-// Six evenly spaced stops starting at the left (180°) and sweeping over the top toward the
-// right, then around the bottom back to the start.
+// Seis paradas igualmente espaçadas começando na esquerda (180°) e varrendo por cima em direção
+// à direita, depois em volta por baixo de volta ao início.
 const BASE_ANGLES = PROJECTS.map((_, i) => 180 - i * (360 / PROJECTS.length));
 
-const RING_PADDING = 6; // px of breathing room between the ring's images and the stage's edge
+const RING_PADDING = 6; // px de espaço de respiro entre as imagens do anel e a borda do stage
 
-// The journey each project image takes before joining the ring — offsets (vw, vh) from the
-// ring's own center, walked in order. The final leg isn't listed here: it's whatever the ring
-// formula currently targets for that image (see `render`), so the path always hands off cleanly
-// into the spinning circle instead of aiming at a fixed point that rotation would drift past.
+// A jornada que cada imagem de projeto percorre antes de entrar no anel — offsets (vw, vh) a
+// partir do próprio centro do anel, percorridos em ordem. O trecho final não está listado aqui: é
+// o que a fórmula do anel estiver mirando naquele momento para essa imagem (ver `render`), então o
+// caminho sempre entrega de forma limpa para o círculo giratório em vez de mirar num ponto fixo que
+// a rotação acabaria ultrapassando.
 const PATH_WAYPOINTS = [
-  { dx: -55, dy: 18 }, // enters off-screen, from the left
-  { dx: 36, dy: -30 }, // risen, curving over to the right side
-  { dx: 36, dy: 34 }, // descended, still on the right, near the bottom
-  { dx: 18, dy: 34 }, // shifted a bit left
-  { dx: 18, dy: 16 }, // risen a bit again
-  { dx: 3, dy: 6 }, // back left, near the center — about to join the ring
+  { dx: -55, dy: 18 }, // entra fora da tela, pela esquerda
+  { dx: 36, dy: -30 }, // subiu, curvando para o lado direito
+  { dx: 36, dy: 34 }, // desceu, ainda na direita, perto da base
+  { dx: 18, dy: 34 }, // deslocou um pouco para a esquerda
+  { dx: 18, dy: 16 }, // subiu um pouco de novo
+  { dx: 3, dy: 6 }, // de volta à esquerda, perto do centro — prestes a entrar no anel
 ];
 
-// All six images walk the exact same path, at the exact same speed, along one shared timeline —
-// each one just lags behind the previous by this fraction of a full traversal, so they read as
-// one connected chain moving together (like a train, or a little snake) instead of six separate
-// solo trips.
+// As seis imagens percorrem exatamente o mesmo caminho, na mesma velocidade, ao longo de uma
+// única linha do tempo compartilhada — cada uma só fica atrasada em relação à anterior por essa
+// fração de um percurso completo, então elas parecem uma corrente conectada se movendo junta (como
+// um trem, ou uma cobrinha) em vez de seis viagens solo separadas.
 const SNAKE_GAP = 0.03;
 
 const SCALE_START = 0.5;
@@ -50,9 +51,10 @@ const BLUR_START_PX = 14;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-// Progress arrives imperatively from PlataformaProjetos (the shared pinned Stage hosting this
-// section, revealed underneath Plataforma's closing window) instead of this section pinning
-// itself — see that component for the combined scroll choreography.
+// O progresso chega de forma imperativa a partir do PlataformaProjetos (o Stage fixado
+// compartilhado que hospeda essa seção, revelada por baixo da janela de fechamento do Plataforma)
+// em vez dessa seção fixar a si mesma — veja aquele componente para a coreografia de scroll
+// combinada.
 export const Projetos = forwardRef(function Projetos(_props, ref) {
   const titleRef = useRef(null);
   const ringStageRef = useRef(null);
@@ -78,8 +80,9 @@ export const Projetos = forwardRef(function Projetos(_props, ref) {
       titleRef.current.style.filter = `blur(${(BLUR_START_PX * (1 - t)).toFixed(2)}px)`;
     }
 
-    // Constant (linear, not eased) angular speed — the ring turns steadily the whole time, both
-    // while projects are still filling in and during the extra lap once the ring is complete.
+    // Velocidade angular constante (linear, sem easing) — o anel gira de forma constante o tempo
+    // todo, tanto enquanto os projetos ainda estão entrando quanto durante a volta extra assim que o
+    // anel está completo.
     let turns;
     if (progress <= RING_START) {
       turns = 0;
@@ -92,9 +95,10 @@ export const Projetos = forwardRef(function Projetos(_props, ref) {
 
     const n = PROJECTS.length;
     const formWindow = FORM_END - RING_START;
-    // The shared timeline P runs from 0 (leader starts) to 1 + (n-1)*SNAKE_GAP (tail finishes),
-    // scaled so that final value lands exactly at FORM_END — every image travels the same
-    // distance in the same amount of scroll, just time-shifted from the one ahead of it.
+    // A linha do tempo compartilhada P vai de 0 (o líder começa) até 1 + (n-1)*SNAKE_GAP (a cauda
+    // termina), escalada para que o valor final caia exatamente em FORM_END — toda imagem percorre a
+    // mesma distância na mesma quantidade de scroll, só deslocada no tempo em relação à que está na
+    // frente dela.
     const formT = clamp01((progress - RING_START) / formWindow);
     const sharedP = formT * (1 + (n - 1) * SNAKE_GAP);
     const radius = radiusRef.current;
@@ -104,20 +108,20 @@ export const Projetos = forwardRef(function Projetos(_props, ref) {
     itemRefs.current.forEach((el, i) => {
       if (!el) return;
 
-      // Each image rides the same rotating frame as the others (its base angle plus the
-      // shared rotation) — it never spins in place itself, only its position sweeps around
-      // the ring, like cabins on a Ferris wheel staying upright.
+      // Cada imagem acompanha o mesmo referencial giratório que as outras (seu ângulo base mais a
+      // rotação compartilhada) — ela nunca gira no próprio eixo, só sua posição varre em volta do
+      // anel, como cabines de uma roda-gigante que permanecem eretas.
       const angleDeg = BASE_ANGLES[i] + rotationDeg;
       const rad = (angleDeg * Math.PI) / 180;
       const liveTarget = { x: radius * Math.cos(rad), y: radius * Math.sin(rad) };
 
       const t = clamp01(sharedP - i * SNAKE_GAP);
 
-      // Walk the fixed waypoints, then hand off to the ring's own live target as the final leg.
-      // Parametrized by actual arc length (not equal time per segment) and interpolated
-      // linearly within each one — constant speed across the whole route, so every image keeps
-      // exactly the same gap to the one ahead of it instead of bunching up on short segments and
-      // spreading out on long ones.
+      // Percorre os waypoints fixos, e então entrega para o alvo ao vivo do próprio anel como o
+      // trecho final. Parametrizado pelo comprimento de arco real (não tempo igual por segmento) e
+      // interpolado linearmente dentro de cada um — velocidade constante em toda a rota, então cada
+      // imagem mantém exatamente a mesma distância da que está à sua frente, em vez de se aglomerar
+      // em segmentos curtos e se espalhar em segmentos longos.
       const points = [...PATH_WAYPOINTS.map((p) => ({ x: p.dx * vw, y: p.dy * vh })), liveTarget];
       const segLengths = [];
       let total = 0;
@@ -145,8 +149,8 @@ export const Projetos = forwardRef(function Projetos(_props, ref) {
       const x = a.x + (b.x - a.x) * localT;
       const y = a.y + (b.y - a.y) * localT;
 
-      // Opacity/scale ramp in quickly right as the image starts its journey, then hold at full
-      // strength for the rest of the flight — no need to linger half-transparent mid-path.
+      // Opacidade/escala sobem rapidamente bem quando a imagem começa sua jornada, depois seguram na
+      // força total pelo resto do voo — sem necessidade de ficar semitransparente no meio do caminho.
       const fadeT = easeOutCubic(clamp01(t / 0.2));
 
       el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${(SCALE_START + (1 - SCALE_START) * fadeT).toFixed(3)})`;

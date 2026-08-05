@@ -1,8 +1,9 @@
 let apiPromise = null;
 
-// Loads the YouTube IFrame Player API once (shared across every caller) and resolves with the
-// global `window.YT` object once it's actually usable (`YT.Player` exists) — components can
-// just `await loadYouTubeApi()` without worrying about the script tag or load races.
+// Carrega a API do YouTube IFrame Player uma única vez (compartilhada entre todos os chamadores) e
+// resolve com o objeto global `window.YT` assim que ele estiver realmente utilizável (`YT.Player`
+// existe) — os componentes podem simplesmente fazer `await loadYouTubeApi()` sem se preocupar com
+// a tag de script ou disputas de carregamento.
 export function loadYouTubeApi() {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (window.YT?.Player) return Promise.resolve(window.YT);

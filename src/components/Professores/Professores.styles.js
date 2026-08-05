@@ -38,8 +38,8 @@ export const RightCol = styled.div`
   align-items: center;
   justify-content: center;
   width: min(52%, 700px);
-  /* Nudged down from dead-center so the topmost connecting lines clear the fixed header
-     instead of poking up underneath it. */
+  /* Deslocado para baixo do centro exato para que as linhas de conexão mais altas fiquem livres do
+     header fixo em vez de aparecerem por baixo dele. */
   margin-top: clamp(2.5rem, 6vh, 4rem);
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
@@ -98,9 +98,10 @@ export const ClosingLine = styled.p`
   margin-top: 1.75rem;
 `;
 
-/* The whole diagram fades/scales/sharpens into view once scrolled near — the site's usual
-   depth-emerge entrance — then everything inside just runs continuously (no further scroll
-   tie-in), since this is meant to read as a living network, not a scroll-scrubbed sequence. */
+/* O diagrama inteiro aparece com fade/escala/nitidez assim que o scroll se aproxima — a entrada de
+   surgimento em profundidade padrão do site — depois tudo dentro dele simplesmente roda continuamente
+   (sem mais nenhuma ligação com o scroll), já que isso deve passar a sensação de uma rede viva, não uma
+   sequência controlada pelo scroll. */
 export const Stage = styled.div`
   position: relative;
   width: 100%;
@@ -123,9 +124,9 @@ const spinLeft = keyframes`
   to { transform: translate(-50%, -50%) rotate(-360deg); }
 `;
 
-/* True circle (not flattened), solid stroke — purely decorative, independent of the actual
-   node positions (which sit on their own true circular rings). Slowly spins counter-clockwise
-   ("left"), same direction the icons themselves orbit. */
+/* Círculo verdadeiro (não achatado), traço sólido — puramente decorativo, independente das posições
+   reais dos nós (que ficam em seus próprios anéis circulares verdadeiros). Gira lentamente no sentido
+   anti-horário ("esquerda"), mesma direção em que os próprios ícones orbitam. */
 export const OrbitRing = styled.div`
   position: absolute;
   top: 50%;
@@ -151,8 +152,8 @@ const dotPulse = keyframes`
   50% { transform: scale(1.5); filter: drop-shadow(0 0 9px currentColor); }
 `;
 
-/* Position (cx/cy) is driven per-frame from JS — this only handles the pulsing
-   glow/size on top of that, staggered per dot via $delay so they don't all throb in unison. */
+/* A posição (cx/cy) é controlada frame a frame via JS — isso só cuida do brilho/tamanho pulsante
+   por cima disso, escalonado por ponto via $delay para que não pulsem todos em uníssono. */
 export const EnergyDot = styled.circle`
   transform-box: fill-box;
   transform-origin: center;
@@ -171,10 +172,10 @@ const pulse = keyframes`
   }
 `;
 
-/* The generated brain image kept a near-black backdrop instead of true alpha transparency —
-   `screen` blend mode makes near-black pixels resolve to whatever's behind them (this
-   section's own near-black background), so only the glow itself actually shows, no visible
-   square edge. */
+/* A imagem gerada do cérebro manteve um fundo quase preto em vez de transparência alfa real —
+   o blend mode `screen` faz com que pixels quase pretos se resolvam para o que estiver atrás deles
+   (o próprio fundo quase preto dessa seção), então só o brilho em si realmente aparece, sem borda
+   quadrada visível. */
 export const BrainImg = styled.img`
   position: absolute;
   top: 50%;
@@ -186,9 +187,9 @@ export const BrainImg = styled.img`
   z-index: 3;
 `;
 
-/* Small bright nucleus at the very center of the brain, like the core seen in the middle of
-   the reference sphere — its scale/opacity are driven per-frame from JS as inbound energy
-   arrives, so it visibly pulses brighter each time it "feels" the incoming energy. */
+/* Pequeno núcleo brilhante bem no centro do cérebro, como o núcleo visto no meio da esfera de
+   referência — sua escala/opacidade são controladas frame a frame via JS conforme a energia vai
+   chegando, então ele visivelmente pulsa mais brilhante cada vez que "sente" a energia chegando. */
 export const BrainCore = styled.div`
   position: absolute;
   top: 50%;

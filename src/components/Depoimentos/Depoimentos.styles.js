@@ -68,9 +68,9 @@ export const VideoStage = styled.div`
     border: none;
   }
 
-  /* No controls are shown, but the iframe itself still toggles play/pause on click by
-     default — blocking pointer events on it removes that too, so there's truly no way to
-     interact with the video. */
+  /* Nenhum controle é exibido, mas o próprio iframe ainda alterna play/pause ao clicar por
+     padrão — bloquear eventos de ponteiro nele remove isso também, então realmente não há como
+     interagir com o vídeo. */
   iframe {
     pointer-events: none;
   }

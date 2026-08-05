@@ -80,9 +80,9 @@ export function Depoimentos() {
   const goPrev = () => setIndex((i) => Math.max(0, i - 1));
   const goNext = () => setIndex((i) => Math.min(TESTIMONIALS.length - 1, i + 1));
 
-  // Only the active slide gets a real YT.Player (the rest just show a thumbnail) — created
-  // fresh on a plain DOM node (not one React itself renders into) so the IFrame API is free to
-  // replace it with its own iframe without React ever trying to diff/remove that node itself.
+  // Só o slide ativo recebe um YT.Player de verdade (os demais só mostram uma miniatura) —
+  // criado num nó DOM simples (não um nó que o próprio React renderiza), para que a API do
+  // IFrame fique livre para substituí-lo pelo próprio iframe sem o React tentar comparar/remover esse nó.
   useEffect(() => {
     let cancelled = false;
     const outer = mountRef.current;
@@ -105,8 +105,8 @@ export function Depoimentos() {
           mute: 1,
           start: current.startTime,
           end: current.endTime,
-          // No controls at all — with the seek bar gone there's no way to drag outside the
-          // start/end trim, pause, unmute, or change any setting; it just plays on loop.
+          // Sem nenhum controle — com a barra de busca fora, não tem como arrastar para fora do
+          // trecho de início/fim, pausar, tirar o mudo ou mudar qualquer configuração; ele só toca em loop.
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -117,8 +117,8 @@ export function Depoimentos() {
           playsinline: 1,
         },
         events: {
-          // `end` stops the clip there, but looping back to the start (instead of just
-          // stopping) needs an explicit seek+replay once it reports ENDED.
+          // `end` para o clipe ali, mas voltar para o início (em vez de simplesmente parar)
+          // exige um seek+replay explícito assim que reportar ENDED.
           onStateChange: (event) => {
             if (event.data === YT.PlayerState.ENDED) {
               event.target.seekTo(current.startTime, true);

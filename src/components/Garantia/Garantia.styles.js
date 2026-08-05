@@ -23,9 +23,9 @@ export const Inner = styled.div`
   }
 `;
 
-/* Slides up from below the section (still hidden by Wrapper's overflow:hidden while off-screen)
-   into its resting spot — translateY is driven per-frame from JS, matching how the site does
-   scroll-scrubbed entrances elsewhere (Plataforma, Projetos). */
+/* Desliza de baixo da seção para cima (ainda escondido pelo overflow:hidden do Wrapper enquanto
+   fora da tela) até sua posição de repouso — o translateY é controlado frame a frame via JS, do
+   mesmo jeito que o site faz entradas controladas por scroll em outros lugares (Plataforma, Projetos). */
 export const ShieldWrapper = styled.div`
   position: relative;
   flex-shrink: 0;

@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Extracts frames from a video file, in-browser (no server/ffmpeg dependency), so they can
- * be scrubbed on a canvas frame-by-frame in sync with scroll. Two passes:
+ * Extrai frames de um arquivo de vídeo, direto no navegador (sem depender de servidor/ffmpeg),
+ * para que possam ser controlados num canvas frame a frame em sincronia com o scroll. Duas
+ * passadas:
  *
- * 1. Coarse: a quick, evenly-spaced sweep of `coarseCount` frames across the whole clip
- *    (resting/`priorityIndex` position captured first). Fast enough to build a rough-but-
- *    correct motion curve almost immediately, instead of scrubbing must wait for the full
- *    fine pass to have *any* correctly-paced motion.
- * 2. Fine: the full `frameCount` pass (priority frame first), refining smoothness once done.
+ * 1. Grosseira: uma varredura rápida e igualmente espaçada de `coarseCount` frames por todo o
+ *    clipe (a posição de repouso/`priorityIndex` é capturada primeiro). Rápida o suficiente para
+ *    construir uma curva de movimento aproximada-mas-correta quase imediatamente, em vez de o
+ *    scrub precisar esperar a passada fina completa para ter *qualquer* movimento com o ritmo certo.
+ * 2. Fina: a passada completa de `frameCount` (frame de prioridade primeiro), refinando a suavidade
+ *    quando terminada.
  *
- * Both passes share the same ratio space (frame i represents time `i/(N-1) * duration`), so
- * a caller building a motion curve from either array is describing the same timeline — just
- * at different resolutions — and can hand off from coarse to fine without a jump.
+ * As duas passadas compartilham o mesmo espaço de proporção (o frame i representa o tempo
+ * `i/(N-1) * duration`), então um chamador construindo uma curva de movimento a partir de qualquer
+ * um dos dois arrays está descrevendo a mesma linha do tempo — só que em resoluções diferentes — e
+ * pode fazer a transição da grosseira para a fina sem saltos.
  */
 export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCount = 16 } = {}) {
   const [ready, setReady] = useState(false);
@@ -82,16 +85,16 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
       const duration = video.duration;
       setDuration(duration);
 
-      // priorityIndex is a fine-array index; translate it to the equivalent ratio so the
-      // coarse pass can grab the same pose first too.
+      // priorityIndex é um índice do array fino; traduz para a proporção equivalente para que a
+      // passada grosseira também consiga pegar a mesma pose primeiro.
       const priorityRatio = priorityIndex != null ? priorityIndex / (frameCount - 1) : null;
       const coarsePriorityIndex =
         priorityRatio != null ? Math.round(priorityRatio * (coarseCount - 1)) : null;
 
-      // Pass 1: coarse sweep, resting pose first — unlocks a correctly-paced (if chunky)
-      // scrub almost immediately. Skipped entirely when coarseCount is 0 (callers that don't
-      // need curve-corrected pacing, e.g. a plain looping clip) — primaryReady falls back to
-      // firing from the fine pass in that case, further down.
+      // Passada 1: varredura grosseira, pose de repouso primeiro — libera um scrub com ritmo correto
+      // (ainda que meio truncado) quase imediatamente. Pulada por completo quando coarseCount é 0
+      // (chamadores que não precisam do ritmo corrigido pela curva, ex: um clipe simples em loop) —
+      // nesse caso o primaryReady acaba disparando a partir da passada fina, mais abaixo.
       const usingCoarse = coarseCount > 0;
       if (usingCoarse) {
         for (const i of orderedIndices(coarseCount, coarsePriorityIndex)) {
@@ -103,7 +106,7 @@ export function useVideoFrames(src, { frameCount = 60, priorityIndex, coarseCoun
       }
       if (!cancelled) setCoarseReady(true);
 
-      // Pass 2: fine sweep, refines to full smoothness.
+      // Passada 2: varredura fina, refina até a suavidade completa.
       let done = 0;
       for (const index of orderedIndices(frameCount, priorityIndex)) {
         if (cancelled) return;

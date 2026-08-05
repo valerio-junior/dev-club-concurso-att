@@ -9,8 +9,8 @@ export const Wrapper = styled.section`
   padding: clamp(5rem, 12vh, 8rem) clamp(1.5rem, 6vw, 6rem);
 `;
 
-/* Simple fade-up entrance once scrolled into view — no pin, no scroll-scrub, just a normal
-   section like Depoimentos/Professores. */
+/* Entrada simples de fade-up assim que aparece no scroll — sem pin, sem scroll-scrub, apenas uma
+   seção normal como Depoimentos/Professores. */
 export const Inner = styled.div`
   max-width: 1200px;
   margin: 0 auto;

@@ -71,8 +71,8 @@ const FORMACOES = [
 
 const ENTER_OPACITY_FRACTION = 0.7;
 const BELT_DISTANCE_BUFFER_PX = 80;
-const RIGHT_MARGIN_TARGET_PX = 24; // near-zero margin on the right once a card is on display
-const RISE_DISTANCE_BUFFER_PX = 40; // a bit past the viewport's bottom edge, so it truly starts off-screen
+const RIGHT_MARGIN_TARGET_PX = 24; // margem quase zero à direita assim que um card está em exibição
+const RISE_DISTANCE_BUFFER_PX = 40; // um pouco além da borda inferior do viewport, para que realmente comece fora da tela
 const TABLET_BREAKPOINT_PX = parseInt(theme.breakpoints.tablet, 10);
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -87,8 +87,8 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
   const beltDistanceRef = useRef(1600);
   const riseDistanceRef = useRef(500);
   const progressRef = useRef(0);
-  // Progress (0..1) at which each card's row position lines up with where card 0 started —
-  // i.e. when it "arrives" in view. Measured from real layout, not guessed.
+  // Progresso (0..1) no qual a posição de cada card na fileira se alinha com onde o card 0
+  // começou — ou seja, quando ele "chega" à vista. Medido a partir do layout real, não estimado.
   const arrivalProgressRef = useRef(FORMACOES.map(() => 0));
 
   const measure = useCallback(() => {
@@ -99,9 +99,9 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
     const lastCard = cardRefs.current[cardRefs.current.length - 1];
     if (!belt || !textCol || !cardsRow || !firstCard || !lastCard) return;
 
-    // Push the row so the first (fixed-size) card lands flush against the right margin —
-    // can't rely on justify-content for this since the row overflows way past the viewport
-    // with the other 7 cards, which throws off flexbox's own space distribution.
+    // Empurra a fileira para que o primeiro card (de tamanho fixo) fique rente à margem direita —
+    // não dá para confiar no justify-content para isso já que a fileira transborda bem além do
+    // viewport com os outros 7 cards, o que desregula a própria distribuição de espaço do flexbox.
     cardsRow.style.marginLeft = "0px";
     if (window.innerWidth > TABLET_BREAKPOINT_PX) {
       const computed = window.getComputedStyle(belt);
@@ -113,10 +113,10 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
       cardsRow.style.marginLeft = `${marginLeft}px`;
     }
 
-    // Match every card's height to the first one's natural height — descriptions vary in
-    // length, so left alone the shorter cards end up visually smaller than card 0. Reset to
-    // auto first so the measurement reflects real content, not a stale height from a
-    // previous pass (e.g. after a resize).
+    // Iguala a altura de cada card à altura natural do primeiro — as descrições variam de
+    // comprimento, então se deixados soltos os cards mais curtos acabam visualmente menores que o
+    // card 0. Reseta para auto primeiro para que a medição reflita o conteúdo real, não uma altura
+    // desatualizada de uma passada anterior (ex: depois de um resize).
     cardRefs.current.forEach((el) => {
       if (el) el.style.height = "";
     });
@@ -125,13 +125,14 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
       if (el) el.style.height = `${cardHeight}px`;
     });
 
-    // How far below the viewport a card must start to genuinely rise from off-screen — all
-    // cards share the same resting Y (a single row), so one measurement covers all of them.
-    // Measured relative to the *section's own container*, not the live viewport: at page
-    // load (say, scrolled to the Hero), this section still sits far down the document,
-    // unpinned, so its live viewport position is meaningless — but its offset from its own
-    // container's top is constant regardless of where that container currently sits on the
-    // page, since the container is always exactly 100vh once pinned.
+    // A que distância abaixo do viewport um card precisa começar para realmente subir a partir de
+    // fora da tela — todos os cards compartilham o mesmo Y de repouso (uma única fileira), então uma
+    // medição cobre todos eles. Medido em relação ao *próprio container da seção*, não ao viewport ao
+    // vivo: no carregamento da página (digamos, com o scroll ainda no Hero), essa seção ainda está
+    // bem mais abaixo no documento, sem fixar, então sua posição ao vivo no viewport não tem
+    // significado — mas seu offset em relação ao topo do próprio container é constante independente
+    // de onde esse container esteja atualmente na página, já que o container é sempre exatamente
+    // 100vh assim que fixado.
     const container = containerRef.current;
     if (container) {
       const containerRect = container.getBoundingClientRect();
@@ -140,10 +141,11 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
     }
 
     const originX = firstCard.getBoundingClientRect().left;
-    // BeltLayer's own box is just the viewport width (flex overflow doesn't expand a
-    // parent's own bounding rect) — what we actually need is how far the *last card's*
-    // current right edge sits from the viewport, since that's what has to clear the left
-    // edge for everything (title + the whole row, all riding the same belt) to be gone.
+    // A própria caixa do BeltLayer é só a largura do viewport (overflow de flex não expande o
+    // próprio bounding rect de um pai) — o que realmente precisamos é a que distância a borda
+    // direita atual do *último card* está do viewport, já que é isso que precisa se livrar da borda
+    // esquerda para que tudo (título + a fileira inteira, todos andando na mesma esteira) tenha ido
+    // embora.
     const lastCardRight = lastCard.getBoundingClientRect().right;
     beltDistanceRef.current = Math.max(lastCardRight + BELT_DISTANCE_BUFFER_PX, 1);
 
@@ -156,8 +158,8 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
 
   const render = useCallback((progress) => {
     if (beltLayerRef.current) {
-      // Linear, not eased — a real conveyor moves at a constant rate, and it keeps the
-      // arrival-progress math below simple and predictable.
+      // Linear, sem easing — uma esteira de verdade se move a uma taxa constante, e isso mantém a
+      // matemática de progresso de chegada abaixo simples e previsível.
       const x = -progress * beltDistanceRef.current;
       beltLayerRef.current.style.transform = `translateX(${x.toFixed(2)}px)`;
     }
@@ -172,9 +174,9 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
         return;
       }
 
-      // Rises across the *entire* gap since the previous card arrived (i.e. since the belt
-      // started opening up room on the right for it) instead of a short fixed window right
-      // before arrival — the whole point being to actually see it climb as you scroll.
+      // Sobe ao longo de *toda* a lacuna desde que o card anterior chegou (ou seja, desde que a
+      // esteira começou a abrir espaço à direita para ele) em vez de uma janela curta e fixa logo
+      // antes da chegada — o objetivo é realmente ver ele subindo conforme você rola.
       const riseStart = i > 0 ? arrivalProgressRef.current[i - 1] : 0;
       if (progress <= riseStart) {
         el.style.opacity = "0";
@@ -190,9 +192,10 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
     });
   }, []);
 
-  // Progress now arrives imperatively from FormacoesConteudosIA (the shared pinned Stage that
-  // hosts this section and ConteudosIA together, letting the two overlap) instead of this
-  // section pinning itself — see that component for the combined scroll choreography.
+  // O progresso agora chega de forma imperativa a partir do FormacoesConteudosIA (o Stage fixado
+  // compartilhado que hospeda essa seção e o ConteudosIA juntos, permitindo que os dois se
+  // sobreponham) em vez dessa seção fixar a si mesma — veja aquele componente para a coreografia de
+  // scroll combinada.
   const renderAtProgress = useCallback(
     (progress) => {
       progressRef.current = progress;
@@ -207,11 +210,11 @@ export const Formacoes = forwardRef(function Formacoes(_props, ref) {
     measure();
     render(progressRef.current);
 
-    // Other sections (their own pin-spacers, videos loading, etc.) can still change the
-    // page's total layout after this section's own initial measurement — window "load" and
-    // "resize" don't cover all of that, but GSAP's own "refresh" event fires every time
-    // ScrollTrigger recalculates anything (e.g. a sibling section's pin-spacer changing
-    // height), which is exactly when this section's cached measurements can go stale.
+    // Outras seções (seus próprios pin-spacers, vídeos carregando, etc.) ainda podem mudar o
+    // layout total da página depois da medição inicial dessa seção — os eventos "load" e "resize" da
+    // window não cobrem tudo isso, mas o próprio evento "refresh" do GSAP dispara toda vez que o
+    // ScrollTrigger recalcula qualquer coisa (ex: o pin-spacer de uma seção irmã mudando de altura),
+    // que é exatamente quando as medições em cache dessa seção podem ficar desatualizadas.
     const refresh = () => {
       measure();
       render(progressRef.current);

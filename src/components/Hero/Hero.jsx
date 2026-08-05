@@ -7,44 +7,49 @@ import { theme } from "../../styles/theme";
 import { Wrapper, Inner, TextCol, Heading, Word, Char, CharacterStage, CharacterCanvas, Vignette } from "./Hero.styles";
 
 const VIDEO_SRC = "/assets/generated/hero-rodolfo.mp4";
-// Finer sampling keeps neighboring frames close in pose, so the cross-fade below blends
-// near-identical images instead of visibly different ones (which reads as a "ghosted" jump).
+// Uma amostragem mais fina mantém os frames vizinhos com poses próximas, então o crossfade
+// abaixo mistura imagens quase idênticas em vez de imagens visivelmente diferentes (o que passaria
+// a sensação de um salto "fantasma").
 const FRAME_COUNT = 60;
-// A quick, coarse sweep (see useVideoFrames) so we have a correct *pacing* curve almost
-// immediately on load. That curve is kept forever once computed — the fine 60-frame set only
-// adds more images to sample from (visual smoothness), it never recomputes/replaces the
-// pacing itself, so there's no "hand-off" moment that can ever jump or glitch.
+// Uma varredura rápida e grosseira (ver useVideoFrames) para termos uma curva de *ritmo*
+// correta quase imediatamente ao carregar. Essa curva é mantida para sempre depois de calculada —
+// o conjunto fino de 60 frames só adiciona mais imagens para amostrar (suavidade visual), nunca
+// recalcula/substitui o ritmo em si, então não existe um momento de "transição" que possa saltar
+// ou falhar.
 const COARSE_COUNT = 16;
 const MAX_BLUR_PX = 7;
-// Blur falls off with (1 - eased) raised to this power instead of linearly — a linear falloff
-// kept him uncomfortably blurry through the middle of the turn. A higher power front-loads the
-// blur onto "de costas" (still fully blurred there) and clears up quickly once he starts turning.
+// O desfoque diminui com (1 - eased) elevado a essa potência em vez de linearmente — uma queda
+// linear deixava ele desconfortavelmente desfocado no meio da virada. Uma potência maior concentra
+// o desfoque no "de costas" (ainda totalmente desfocado ali) e clareia rápido assim que ele começa
+// a virar.
 const BLUR_FALLOFF_POWER = 2.5;
 const RIGHT_MARGIN_RATIO = 0.06;
 const ZOOM_START = 1;
 const ZOOM_END = 1.18;
 const FOCUS_Y = 0.42;
-// The clip runs frontal -> turning away (the model anchors the reference photo to raw frame 0),
-// so we scrub it in reverse for costas -> quase de frente (not fully frontal).
-const RAW_START_RATIO = 1; // eased = 0 -> de costas (resting frame, extracted first)
-const RAW_END_RATIO = 0.2; // eased = 1 -> quase de frente, stops short of the reference photo
-// Safety net regardless of how the source clip's background actually behaves: nudges any
-// residual light/gray background back toward the page's near-black. Light near "de costas"
-// (already reliable) so we don't muddy it, ramping up toward the frontal end (where the
-// model has drifted gray/white before) without needing to know the exact clip in advance.
+// O clipe roda de frontal -> virando de costas (o modelo ancora a foto de referência no frame 0
+// bruto), então damos scrub nele ao contrário para ir de costas -> quase de frente (não totalmente
+// de frente).
+const RAW_START_RATIO = 1; // eased = 0 -> de costas (frame de repouso, extraído primeiro)
+const RAW_END_RATIO = 0.2; // eased = 1 -> quase de frente, para antes de chegar na foto de referência
+// Rede de segurança independente de como o fundo do clipe original realmente se comporta:
+// empurra qualquer fundo cinza/claro residual de volta para o quase-preto da página. Leve perto do
+// "de costas" (já confiável) para não sujar, aumentando em direção ao final frontal (onde o modelo
+// já desviou para cinza/branco antes) sem precisar saber o clipe exato de antemão.
 const BACKGROUND_CRUSH_MIN = 0.08;
 const BACKGROUND_CRUSH_MAX = 0.4;
 
 const HEADING_TEXT = "Venha fazer parte da maior escola de tecnologia do mercado igual +25 mil alunos";
-// How much of the whole scroll range each letter takes to go from invisible to fully
-// visible. Letters start their reveal staggered across the range, so a wider window means
-// more overlap between neighbors (a flowing wave) instead of a strict one-by-one typewriter.
+// Quanto do intervalo total de scroll cada letra leva para ir de invisível a totalmente
+// visível. As letras começam sua revelação escalonadas ao longo do intervalo, então uma janela
+// mais larga significa mais sobreposição entre vizinhas (uma onda fluida) em vez de uma máquina
+// de escrever estrita, letra por letra.
 const LETTER_REVEAL_WINDOW = 0.45;
 
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-// Maps `eased` (0..1 scroll progress) to a target ratio (0..1 position in the raw clip) via
-// the motion curve — independent of which frame array we'll eventually sample from.
+// Mapeia `eased` (progresso de scroll 0..1) para uma proporção alvo (posição 0..1 no clipe bruto)
+// através da curva de movimento — independente de qual array de frames vamos acabar amostrando.
 function targetRawRatio(curve, eased) {
   const startIndex = Math.round(RAW_START_RATIO * (curve.length - 1));
   const endIndex = Math.round(RAW_END_RATIO * (curve.length - 1));
@@ -64,10 +69,11 @@ export function Hero() {
   const positionsRef = useRef({ centerX: 0, rightX: 0 });
   const motionCurveRef = useRef(null);
   const scrollProgressRef = useRef(0);
-  // Blends the canvas frame from the fixed resting pose toward the curve-correct one once the
-  // motion curve is ready, instead of snapping straight to it — the snap is only invisible when
-  // the curve finishes near-instantly (the normal case); if it's ever delayed (slow network,
-  // device under load), this keeps the correction a short glide instead of a visible jump.
+  // Faz a mistura do frame do canvas, da pose de repouso fixa até a correta pela curva, assim que
+  // a curva de movimento estiver pronta, em vez de saltar direto para ela — o salto só é invisível
+  // quando a curva termina quase instantaneamente (o caso normal); se algum dia atrasar (rede lenta,
+  // dispositivo sobrecarregado), isso mantém a correção como um pequeno deslize em vez de um salto
+  // visível.
   const catchupBlendRef = useRef(1);
   const catchupDoneRef = useRef(false);
 
@@ -105,8 +111,8 @@ export function Hero() {
     return () => window.removeEventListener("resize", measurePositions);
   }, [measurePositions]);
 
-  // Computed once, from the fast coarse sweep, and never recomputed — see the note on
-  // COARSE_COUNT above for why that matters.
+  // Calculada uma vez, a partir da varredura grosseira rápida, e nunca recalculada — ver a nota
+  // sobre COARSE_COUNT acima para entender por que isso importa.
   useEffect(() => {
     if (coarseReady && !motionCurveRef.current) {
       motionCurveRef.current = computeMotionCurve(coarseFrames.current);
@@ -139,25 +145,27 @@ export function Hero() {
 
       const canvas = canvasRef.current;
       const curve = motionCurveRef.current;
-      // Fine frames refine visual smoothness once fully loaded; coarse frames (ready much
-      // sooner) are the fallback. Either way the curve above is the same, so switching from
-      // one array to the other just picks a nearer frame on the same timeline — never a jump.
+      // Os frames finos refinam a suavidade visual assim que totalmente carregados; os frames
+      // grosseiros (prontos bem mais cedo) são o fallback. De qualquer forma a curva acima é a
+      // mesma, então trocar de um array para o outro só escolhe um frame mais próximo na mesma linha
+      // do tempo — nunca um salto.
       const usingFine = ready && frames.current.length > 0;
       const list = usingFine ? frames.current : coarseFrames.current;
 
       if (canvas && list.length) {
         const restingFloatIndex = Math.round(RAW_START_RATIO * (list.length - 1));
-        // While the curve isn't ready yet, blend is pinned at its initial value (1, but curve
-        // is null so this branch is skipped entirely — see the plain resting fallback below).
-        // Once ready, blend starts at 0 (still resting) and glides to 1 (fully curve-correct).
+        // Enquanto a curva ainda não está pronta, o blend fica travado no valor inicial (1, mas a curva
+        // é null então esse branch é pulado inteiramente — ver o fallback simples de repouso abaixo).
+        // Assim que pronta, o blend começa em 0 (ainda em repouso) e desliza até 1 (totalmente correto pela curva).
         const floatIndex = curve
           ? restingFloatIndex + (targetRawRatio(curve, eased) * (list.length - 1) - restingFloatIndex) * catchupBlendRef.current
           : restingFloatIndex;
 
-        // Cross-fading between neighbors only looks good when they're close in pose, which
-        // is only guaranteed with the dense 60-frame set — the sparse 16-frame coarse set has
-        // neighbors far enough apart in pose that blending them ghosts into a double-exposure.
-        // So: blend on the fine set, hard-cut to the single nearest frame on the coarse one.
+        // Fazer crossfade entre vizinhos só fica bom quando eles têm poses próximas, o que só é
+        // garantido com o conjunto denso de 60 frames — o conjunto grosseiro esparso de 16 frames tem
+        // vizinhos distantes o bastante em pose para que misturá-los vire um fantasma de dupla
+        // exposição. Então: mistura no conjunto fino, corte seco para o único frame mais próximo no
+        // grosseiro.
         const indexA = usingFine ? Math.floor(floatIndex) : Math.round(floatIndex);
         const indexB = usingFine ? Math.min(indexA + 1, list.length - 1) : indexA;
         const blend = usingFine ? floatIndex - indexA : 0;
@@ -177,8 +185,8 @@ export function Hero() {
           }
           const zoom = ZOOM_START + (ZOOM_END - ZOOM_START) * eased;
 
-          // Cross-fade between the two neighboring frames instead of hard-cutting to the
-          // nearest one — smooths out any abrupt pose jump baked into the source clip.
+          // Faz crossfade entre os dois frames vizinhos em vez de cortar direto para o mais próximo —
+          // suaviza qualquer salto brusco de pose que já esteja embutido no clipe original.
           if (frameA) {
             ctx.globalAlpha = 1;
             drawImageCover(ctx, frameA, canvas.width, canvas.height, { zoom, focusY: FOCUS_Y });
@@ -198,8 +206,8 @@ export function Hero() {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.globalAlpha = 1;
         }
-        // If neither neighboring frame has finished extracting yet, keep whatever the
-        // canvas already shows rather than flashing it blank.
+        // Se nenhum dos frames vizinhos terminou de extrair ainda, mantém o que o canvas já está
+        // mostrando em vez de piscar em branco.
       }
     },
     [frames, coarseFrames, ready]
@@ -207,7 +215,7 @@ export function Hero() {
 
   useStickyScrub(containerRef, { distance: 2, onUpdate: render, progressRef: scrollProgressRef });
 
-  // Paint the resting (progress = 0) frame as soon as it's captured, before any scroll.
+  // Pinta o frame de repouso (progress = 0) assim que ele é capturado, antes de qualquer scroll.
   useEffect(() => {
     if (primaryReady) {
       measurePositions();
@@ -215,11 +223,11 @@ export function Hero() {
     }
   }, [primaryReady, render, measurePositions]);
 
-  // Once the (only, permanent) motion curve is ready, glide from the resting pose to the
-  // curve-correct one instead of snapping there in a single frame — see catchupBlendRef above.
-  // Guarded to run only once: this effect can re-fire later when `render` changes identity
-  // (e.g. once the fine frames finish loading), and re-running the glide at that point would
-  // introduce a second, unwanted jump/glide of its own.
+  // Assim que a curva de movimento (única, permanente) estiver pronta, desliza da pose de repouso
+  // até a correta pela curva em vez de saltar para ela num único frame — ver catchupBlendRef acima.
+  // Protegido para rodar só uma vez: esse effect pode disparar de novo depois quando `render` mudar
+  // de identidade (ex: quando os frames finos terminarem de carregar), e rodar o deslize de novo
+  // nesse momento introduziria um segundo salto/deslize indesejado próprio.
   useEffect(() => {
     if (coarseReady && !catchupDoneRef.current) {
       catchupDoneRef.current = true;
@@ -235,8 +243,8 @@ export function Hero() {
     return undefined;
   }, [coarseReady, render]);
 
-  // Once the fine frames are fully loaded, re-paint again — refines to full visual smoothness
-  // (same pacing as above, just more frames to choose from).
+  // Assim que os frames finos estiverem totalmente carregados, pinta de novo — refina até a
+  // suavidade visual completa (mesmo ritmo de antes, só com mais frames para escolher).
   useEffect(() => {
     if (ready) {
       render(scrollProgressRef.current);

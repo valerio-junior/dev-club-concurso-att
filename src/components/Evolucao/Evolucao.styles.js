@@ -1,8 +1,8 @@
 import styled, { keyframes } from "styled-components";
 
-/* Not pinned — scrolls normally. Children of the path-synced group (Node, Card) are
-   absolutely positioned using the *same* percentage coordinate space as the SVG's viewBox, so
-   the line is guaranteed to pass exactly through each node's center (see Evolucao.jsx). */
+/* Não fixado — rola normalmente. Os filhos do grupo sincronizado com o path (Node, Card) são
+   posicionados de forma absoluta usando o *mesmo* espaço de coordenadas em porcentagem do viewBox
+   do SVG, então a linha tem garantia de passar exatamente pelo centro de cada nó (ver Evolucao.jsx). */
 export const Track = styled.section`
   position: relative;
   width: 100%;
@@ -21,8 +21,9 @@ export const LineSvg = styled.svg`
   pointer-events: none;
 `;
 
-/* A separate, wider, blurred stroke drawn directly behind the crisp line (same path, same
-   dash-draw progress) — a static "shield" glow around it, not the line itself pulsing. */
+/* Um traço separado, mais largo e desfocado, desenhado diretamente atrás da linha nítida (mesmo
+   path, mesmo progresso de desenho do traço) — um brilho estático de "escudo" ao redor dela, não a
+   própria linha pulsando. */
 export const LineHalo = styled.path`
   fill: none;
   stroke: #3b82f6;
@@ -39,7 +40,7 @@ export const LinePath = styled.path`
   stroke-linecap: round;
 `;
 
-/* The dot itself stays a fixed size/color — only its surrounding halo ring pulses. */
+/* O ponto em si mantém tamanho/cor fixos — só o anel de halo ao redor dele pulsa. */
 export const LineTip = styled.circle`
   fill: #2563eb;
 `;
@@ -145,10 +146,10 @@ export const CardDescription = styled.p`
   line-height: 1.45;
 `;
 
-/* The one part of this section that pins — fixes in place once reached, and only releases
-   once the WhatsApp message has finished being typed and sent. Laptop sits near the top (not
-   dead-center) so the connector line above it (bridging from where the Track's line ends) stays
-   short. */
+/* A única parte dessa seção que fixa — trava no lugar assim que alcançada, e só solta depois que
+   a mensagem do WhatsApp termina de ser digitada e enviada. O notebook fica perto do topo (não no
+   centro exato) para que a linha de conexão acima dele (fazendo a ponte de onde a linha do Track
+   termina) fique curta. */
 export const LaptopWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -162,11 +163,12 @@ export const LaptopWrapper = styled.div`
   background: ${({ theme }) => theme.colors.background};
 `;
 
-/* Bridges the visual gap between the Track's line ending and the laptop image, same glowing
-   style as the line itself. Starts fully collapsed (scaleY 0) and draws in — driven imperatively
-   from this section's own scrub progress (see renderLaptop in Evolucao.jsx) — instead of being
-   statically visible from the start, so it reads as the line continuing, not a separate static
-   piece that was already there. */
+/* Faz a ponte do vão visual entre o final da linha do Track e a imagem do notebook, com o mesmo
+   estilo brilhante da própria linha. Começa totalmente colapsada (scaleY 0) e vai se desenhando —
+   controlada de forma imperativa a partir do próprio progresso de scrub dessa seção (ver
+   renderLaptop em Evolucao.jsx) — em vez de estar visível de forma estática desde o início, para
+   passar a sensação de ser a continuação da linha, não uma peça estática separada que já estava
+   ali. */
 export const Connector = styled.div`
   width: 3px;
   height: 9vh;
@@ -179,12 +181,13 @@ export const Connector = styled.div`
   will-change: transform, opacity;
 `;
 
-/* Back to the static notebook-aberto.png (black-bezel clip-art laptop) after the video
-   experiments didn't pan out — its own aspect ratio is ~1.2987 (900x693). Width capped three
-   ways: a viewport-width fraction, an absolute max, and a viewport-*height*-derived cap (via
-   that ratio) so the image's rendered height can never exceed the space actually available
-   inside the pinned 100vh wrapper (minus padding-top and the Connector above) — otherwise it'd
-   get clipped top/bottom by LaptopWrapper's overflow: hidden. */
+/* De volta à imagem estática notebook-aberto.png (notebook de clip-art com moldura preta) depois
+   que os experimentos com vídeo não deram certo — sua própria proporção é de ~1.2987 (900x693). A
+   largura é limitada de três formas: uma fração da largura do viewport, um máximo absoluto, e um
+   limite derivado da *altura* do viewport (através dessa proporção) para que a altura renderizada
+   da imagem nunca ultrapasse o espaço realmente disponível dentro do wrapper fixado de 100vh (menos
+   o padding-top e o Connector acima) — caso contrário ela seria cortada em cima/embaixo pelo
+   overflow: hidden do LaptopWrapper. */
 export const LaptopStage = styled.div`
   position: relative;
   width: min(60vw, 900px, calc(78vh * 1.2987));
@@ -198,8 +201,8 @@ export const LaptopImage = styled.img`
   display: block;
 `;
 
-/* Fades the image's edges into the page background, same technique used on the Hero/Empresas
-   videos, so it reads as part of the page instead of a hard-edged box. */
+/* Esmaece as bordas da imagem no fundo da página, mesma técnica usada nos vídeos do Hero/Empresas,
+   para que pareça parte da página em vez de uma caixa com bordas duras. */
 export const LaptopVignette = styled.div`
   position: absolute;
   inset: 0;
@@ -207,8 +210,8 @@ export const LaptopVignette = styled.div`
   background: radial-gradient(ellipse at center, transparent 55%, ${({ theme }) => theme.colors.background} 100%);
 `;
 
-/* Positioned over notebook-aberto.png's screen area — the sizing that was already confirmed
-   good before the video detour. */
+/* Posicionado sobre a área da tela do notebook-aberto.png — o dimensionamento que já tinha sido
+   confirmado como bom antes do desvio para vídeo. */
 export const WhatsAppScreen = styled.div`
   position: absolute;
   top: 6.5%;
@@ -264,8 +267,8 @@ export const ChatArea = styled.div`
   background-size: 14px 14px;
 `;
 
-/* Starts hidden — only appears once the message has finished being typed in ComposeInput and
-   "sent" (see the send-transition window in Evolucao.jsx). */
+/* Começa escondido — só aparece depois que a mensagem termina de ser digitada no ComposeInput e
+   "enviada" (ver a janela de transição de envio em Evolucao.jsx). */
 export const Bubble = styled.div`
   align-self: flex-end;
   max-width: 82%;
@@ -280,7 +283,8 @@ export const Bubble = styled.div`
   will-change: opacity, transform;
 `;
 
-/* The bottom compose row, where the message is typed letter-by-letter before "sending". */
+/* A fileira de composição na parte inferior, onde a mensagem é digitada letra por letra antes de
+   "enviar". */
 export const ComposeRow = styled.div`
   flex-shrink: 0;
   display: flex;

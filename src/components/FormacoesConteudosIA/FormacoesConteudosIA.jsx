@@ -4,20 +4,21 @@ import { Formacoes } from "../Formacoes/Formacoes";
 import { ConteudosIA } from "../ConteudosIA/ConteudosIA";
 import { Stage, Layer } from "./FormacoesConteudosIA.styles";
 
-// Total scroll distance (in viewport heights) for the whole combined sequence — both
-// sections share this single pin instead of each reserving their own.
+// Distância total de scroll (em alturas de viewport) para toda a sequência combinada — as duas
+// seções compartilham esse único pin em vez de cada uma reservar o seu próprio.
 const COMBINED_DISTANCE = 7;
 
-// Formações' own belt finishes (last card fully exited, same math it always had) at this
-// fraction of the combined progress.
+// A própria esteira do Formações termina (último card totalmente saído, mesma matemática de
+// sempre) nessa fração do progresso combinado.
 const FORMACOES_END = 0.6;
-// Formações' layer fades out over this window, uncovering ConteudosIA (already mounted
-// underneath) instead of the two simply handing off back-to-back.
+// A camada do Formações desaparece com fade ao longo dessa janela, revelando o ConteudosIA (já
+// montado por baixo) em vez das duas simplesmente se revezarem uma após a outra.
 const FADE_START = 0.48;
 const FADE_END = 0.62;
-// ConteudosIA's own reveal (text, icons, eventually video) only starts once Formações has
-// fully faded out (matches FADE_END) — starting it earlier had the title becoming visible
-// while a Formações card was still solidly on screen, reading as a visual clash.
+// A própria revelação do ConteudosIA (texto, ícones, e eventualmente o vídeo) só começa depois
+// que o Formações termina de desaparecer com fade (corresponde a FADE_END) — começar antes fazia o
+// título ficar visível enquanto um card do Formações ainda estava sólido na tela, o que dava a
+// sensação de um choque visual.
 const IA_START = FADE_END;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));

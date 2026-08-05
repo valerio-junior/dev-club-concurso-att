@@ -1,9 +1,10 @@
 import styled from "styled-components";
 
-/* Absolutely positioned (not its own pinned flow element) — it's stacked, together with
-   ConteudosIA, inside a shared pinned Stage (see FormacoesConteudosIA) so the two can overlap
-   on screen: this section's tail (the last card exiting) plays concurrently with ConteudosIA's
-   opening reveal, instead of finishing completely before the next section starts. */
+/* Posicionado de forma absoluta (não é seu próprio elemento de fluxo fixado) — fica empilhado,
+   junto com o ConteudosIA, dentro de um Stage fixado compartilhado (ver FormacoesConteudosIA) para
+   que os dois possam se sobrepor na tela: a cauda dessa seção (o último card saindo) acontece ao
+   mesmo tempo que a revelação de abertura do ConteudosIA, em vez de terminar completamente antes da
+   próxima seção começar. */
 export const Wrapper = styled.section`
   position: absolute;
   inset: 0;
@@ -11,9 +12,9 @@ export const Wrapper = styled.section`
   background: ${({ theme }) => theme.colors.background};
 `;
 
-/* The conveyor belt itself — title and card slot ride together, continuously translated left
-   in lockstep with scroll from progress 0 all the way to fully off-screen. Nothing here
-   fades or slides in on its own; the belt is the only thing moving them. */
+/* A própria esteira transportadora — o título e o slot de cards andam juntos, continuamente
+   transladados para a esquerda em sincronia com o scroll, do progresso 0 até saírem totalmente da
+   tela. Nada aqui aparece com fade ou desliza sozinho; a esteira é a única coisa que os move. */
 export const BeltLayer = styled.div`
   position: relative;
   width: 100%;
@@ -45,14 +46,14 @@ export const Heading = styled.h2`
   font-weight: 700;
   font-size: clamp(1.8rem, 3.4vw, 2.8rem);
   line-height: 1.3;
-  /* Balances line lengths across wraps (never splits a word) instead of a manual <br /> that
-     can leave an orphaned word on its own line at narrower widths. */
+  /* Equilibra o comprimento das linhas nas quebras (nunca separa uma palavra) em vez de um <br />
+     manual que pode deixar uma palavra órfã sozinha numa linha em larguras mais estreitas. */
   text-wrap: balance;
 `;
 
-/* The row all the cards ride in — laid out side by side (not stacked), naturally
-   overflowing past the viewport to the right. The belt's translateX is what reveals each
-   one in turn; this row itself never moves independently. */
+/* A fileira em que todos os cards ficam — dispostos lado a lado (não empilhados), transbordando
+   naturalmente para além do viewport à direita. O translateX da esteira é o que revela cada um por
+   vez; essa fileira em si nunca se move de forma independente. */
 export const CardsRow = styled.div`
   display: flex;
   align-items: center;
@@ -85,8 +86,8 @@ export const IconRow = styled.div`
   gap: 0.75rem;
 `;
 
-/* A quiet badge behind each logo instead of a bare, flat SVG floating on the card —
-   reads as considered/designed rather than a raw icon dump. */
+/* Um badge discreto atrás de cada logo em vez de um SVG chapado flutuando solto no card —
+   passa a sensação de algo pensado/desenhado em vez de um amontoado cru de ícones. */
 export const IconBadge = styled.div`
   width: 3.25rem;
   height: 3.25rem;
@@ -118,8 +119,8 @@ export const CardDescription = styled.p`
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: clamp(0.95rem, 1.2vw, 1.05rem);
   line-height: 1.6;
-  /* Balances line lengths across wraps (never splits a word — a whole word that doesn't fit
-     just moves entirely to the next line) instead of leaving an orphaned single word alone
-     on the last line. */
+  /* Equilibra o comprimento das linhas nas quebras (nunca separa uma palavra — uma palavra inteira
+     que não cabe simplesmente vai toda para a próxima linha) em vez de deixar uma única palavra
+     órfã sozinha na última linha. */
   text-wrap: balance;
 `;

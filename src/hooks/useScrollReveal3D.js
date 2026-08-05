@@ -2,8 +2,9 @@ import { useLayoutEffect } from "react";
 import { gsap, ScrollTrigger } from "../lib/gsap";
 
 /**
- * Reveals `ref`'s element with a scroll-driven 3D tilt (rotateX + depth + fade).
- * Pass `scrub: true` for effects tied directly to scroll position instead of a one-shot entrance.
+ * Revela o elemento de `ref` com uma inclinação 3D controlada pelo scroll (rotateX + profundidade +
+ * fade). Passe `scrub: true` para efeitos ligados diretamente à posição do scroll em vez de uma
+ * entrada única.
  */
 export function useScrollReveal3D(ref, options = {}) {
   const {

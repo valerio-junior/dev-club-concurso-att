@@ -13,10 +13,10 @@ export const Layer = styled.div`
   inset: 0;
 `;
 
-/* The "window" that closes in on itself as the user scrolls past Plataforma — clip-path is
-   driven per-frame from JS (not a CSS transition), closing symmetrically from all four edges
-   toward the center until it collapses to a single point, revealing Projetos (already mounted
-   underneath, in the plain Layer) through the shrinking gap. */
+/* A "janela" que se fecha sobre si mesma conforme o usuário rola pelo Plataforma — o clip-path é
+   controlado frame a frame via JS (não uma transição CSS), fechando simetricamente das quatro
+   bordas em direção ao centro até colapsar em um único ponto, revelando o Projetos (já montado por
+   baixo, na Layer simples) através da fresta que vai encolhendo. */
 export const ClosingFrame = styled(Layer)`
   will-change: clip-path;
 `;

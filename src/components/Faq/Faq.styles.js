@@ -8,7 +8,7 @@ export const Wrapper = styled.section`
   padding: clamp(5rem, 12vh, 8rem) clamp(1.5rem, 6vw, 6rem);
 `;
 
-/* Same fade-up entrance as Certificados/SalariosDev — no pin, no scroll-scrub. */
+/* Mesma entrada de fade-up do Certificados/SalariosDev — sem pin, sem scroll-scrub. */
 export const Inner = styled.div`
   max-width: 860px;
   margin: 0 auto;
@@ -70,9 +70,9 @@ export const ToggleIcon = styled.svg`
   transform: rotate(${({ $open }) => ($open ? "180deg" : "0deg")});
 `;
 
-/* Height-animates the answer without measuring scrollHeight in JS — grid-template-rows
-   0fr -> 1fr transitions smoothly, with AnswerInner's overflow:hidden clipping the content
-   while it's collapsed. */
+/* Anima a altura da resposta sem medir scrollHeight via JS — a transição de grid-template-rows
+   0fr -> 1fr acontece suavemente, com o overflow:hidden do AnswerInner cortando o conteúdo
+   enquanto está recolhido. */
 export const AnswerGrid = styled.div`
   display: grid;
   grid-template-rows: ${({ $open }) => ($open ? "1fr" : "0fr")};
