@@ -104,3 +104,13 @@ export function useLenis() {
 export function scrollToSection(target, offset = -96) {
   lenisInstance?.scrollTo(target, { offset });
 }
+
+// Usado pelo Loader para impedir scroll (e o ScrollTrigger das seções pinadas) enquanto a intro
+// cinematográfica está rodando.
+export function setScrollLocked(locked) {
+  if (locked) {
+    lenisInstance?.stop();
+  } else {
+    lenisInstance?.start();
+  }
+}

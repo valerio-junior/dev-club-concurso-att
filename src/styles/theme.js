@@ -25,5 +25,6 @@ export const theme = {
   zIndex: {
     header: 100,
     overlay: 200,
+    intro: 300,
   },
 };
