@@ -36,6 +36,7 @@ export const BrainWrapper = styled.div`
   margin: -512px 0 0 -512px;
   z-index: 0;
   pointer-events: none;
+  perspective: 1400px; /* pra o giro no eixo Y do cérebro (rotationY) ganhar profundidade real */
 `;
 
 export const BrainImage = styled.img`

@@ -30,7 +30,12 @@ const DEVCLUB_HOLD_DURATION = 1.1;
 const DEVCLUB_DISSOLVE_DURATION = 1.0;
 
 const BRAIN_OPACITY = 0.35;
-const BRAIN_SPIN_SECONDS = 16; // por volta — giro contínuo, discreto, "não muito rápido"
+// Balanço (não giro completo): vai de 0° até BRAIN_SWING_ANGLE e volta, sem nunca chegar perto de
+// 90°/perfil — uma imagem plana virada em 3D até ~90° sempre vira uma linha fina (é a própria
+// geometria de perspectiva, não dá pra "engrossar" isso com CSS de forma confiável), então o jeito
+// realmente sólido de nunca deixar o cérebro fino é nunca deixar o ângulo chegar perto de lá.
+const BRAIN_SWING_ANGLE = 60;
+const BRAIN_SWING_SECONDS = 8; // duração de UM sentido do balanço (ida OU volta)
 const BRAIN_BASE_SCALE = 0.5; // tamanho de repouso, metade do tamanho "cheio"
 const BRAIN_GROW_SCALE = 1.0; // cresce até esse tamanho (o que hoje é o tamanho "normal") antes de explodir
 const BRAIN_GROW_DURATION = 1.4;
@@ -79,21 +84,21 @@ function runExplosionReveal({ overlayEl, duration = EXPLOSION_REVEAL_DURATION, o
 // só escalar/sumir a imagem inteira. Os estilhaços nascem dentro de um wrapper que herda a mesma
 // rotação/escala/opacidade que a imagem tinha no instante do congelamento, então a transição da
 // imagem única pros pedaços é contínua, sem salto visual.
-function explodeBrainIntoPieces({ wrapperEl, imgEl, src, duration = BRAIN_SHATTER_DURATION, onComplete }) {
-  if (!wrapperEl || !imgEl) {
+function explodeBrainIntoPieces({ wrapperEl, rotorEl, src, duration = BRAIN_SHATTER_DURATION, onComplete }) {
+  if (!wrapperEl || !rotorEl) {
     onComplete?.();
     return null;
   }
 
-  const rotation = gsap.getProperty(imgEl, "rotation");
-  const scale = gsap.getProperty(imgEl, "scale");
-  const opacity = gsap.getProperty(imgEl, "opacity");
+  const rotationY = gsap.getProperty(rotorEl, "rotationY");
+  const scale = gsap.getProperty(rotorEl, "scale");
+  const opacity = gsap.getProperty(rotorEl, "opacity");
 
   const fragmentsEl = document.createElement("div");
   Object.assign(fragmentsEl.style, { position: "absolute", inset: "0", transformOrigin: "50% 50%" });
   wrapperEl.appendChild(fragmentsEl);
-  gsap.set(fragmentsEl, { rotation, scale, opacity });
-  imgEl.style.visibility = "hidden";
+  gsap.set(fragmentsEl, { rotationY, scale, opacity });
+  rotorEl.style.visibility = "hidden";
 
   const grid = BRAIN_SHATTER_GRID;
   const tileSize = 1024 / grid;
@@ -214,7 +219,7 @@ function PhraseCStage({ dustRef, onDone }) {
 // pedaços que voam pra fora — junto com uma explosão de partículas e a página se abrindo a partir do
 // centro, revelando o Hero. Tudo visual, sem DOM próprio: reaproveita o campo de partículas e as
 // refs (Overlay/brain) já montados no Loader.
-function DevClubStage({ dustRef, overlayRef, brainRef, brainWrapperRef, onDone }) {
+function DevClubStage({ dustRef, overlayRef, brainRotorRef, brainWrapperRef, onDone }) {
   useLayoutEffect(() => {
     const dust = dustRef.current;
     if (!dust) return undefined;
@@ -231,12 +236,12 @@ function DevClubStage({ dustRef, overlayRef, brainRef, brainWrapperRef, onDone }
       () => {
         dust.fadeSmoke(0.5);
 
-        const brain = brainRef.current;
-        if (brain) {
-          gsap.killTweensOf(brain, "rotation"); // congela o giro exatamente onde estava, sem pulo
+        const rotor = brainRotorRef.current;
+        if (rotor) {
+          gsap.killTweensOf(rotor, "rotationY"); // congela o giro exatamente onde estava, sem pulo
           brainTweens.push(
-            gsap.to(brain, { scale: BRAIN_GROW_SCALE, duration: BRAIN_GROW_DURATION, ease: "power1.in" }),
-            shakeElement(brain, BRAIN_GROW_DURATION, 16)
+            gsap.to(rotor, { scale: BRAIN_GROW_SCALE, duration: BRAIN_GROW_DURATION, ease: "power1.in" }),
+            shakeElement(rotor, BRAIN_GROW_DURATION, 16)
           );
         }
       },
@@ -248,7 +253,7 @@ function DevClubStage({ dustRef, overlayRef, brainRef, brainWrapperRef, onDone }
         brainTweens.push(
           explodeBrainIntoPieces({
             wrapperEl: brainWrapperRef.current,
-            imgEl: brainRef.current,
+            rotorEl: brainRotorRef.current,
             src: BRAIN_SRC,
             duration: BRAIN_SHATTER_DURATION,
           })
@@ -271,7 +276,7 @@ function DevClubStage({ dustRef, overlayRef, brainRef, brainWrapperRef, onDone }
       brainTweens.forEach((tween) => tween?.kill());
       dust.cancelActive();
     };
-  }, [dustRef, overlayRef, brainRef, brainWrapperRef, onDone]);
+  }, [dustRef, overlayRef, brainRotorRef, brainWrapperRef, onDone]);
 
   return null;
 }
@@ -301,7 +306,7 @@ export function Loader({ onComplete }) {
   const canvasRef = useRef(null);
   const dustRef = useRef(null);
   const overlayRef = useRef(null);
-  const brainRef = useRef(null);
+  const brainRotorRef = useRef(null);
   const brainWrapperRef = useRef(null);
   const model = useMemo(() => buildPhraseModel(PHRASE_A, PHRASE_B), []);
 
@@ -316,17 +321,22 @@ export function Loader({ onComplete }) {
   }, []);
 
   // O cérebro fica visível (opacidade parcial), no tamanho de repouso (metade do "cheio"), atrás do
-  // texto do início ao fim da intro, girando devagar pra direita sem parar — até o DevClubStage
-  // congelar esse giro e crescer ele pra fase final.
+  // texto do início ao fim da intro, balançando em 3D (eixo Y) — o lado direito vem pra frente até
+  // BRAIN_SWING_ANGLE e volta, sem nunca chegar perto de 90°/perfil (onde uma imagem plana sempre
+  // vira uma linha fina) — até o DevClubStage congelar esse balanço e crescer ele pra fase final.
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(brainRef.current, { scale: BRAIN_BASE_SCALE });
-      gsap.to(brainRef.current, { opacity: BRAIN_OPACITY, duration: 1.2, ease: "power1.out" });
-      gsap.to(brainRef.current, {
-        rotation: "+=360",
-        duration: BRAIN_SPIN_SECONDS,
-        ease: "none",
+      gsap.set(brainRotorRef.current, { scale: BRAIN_BASE_SCALE });
+      gsap.to(brainRotorRef.current, { opacity: BRAIN_OPACITY, duration: 1.2, ease: "power1.out" });
+      gsap.to(brainRotorRef.current, {
+        // rotationY (não rotation) — gira no eixo vertical, como um objeto real virando, não um giro
+        // plano de ponta-cabeça. Sinal negativo pra o lado direito vir pra frente. yoyo faz ele voltar
+        // ao invés de completar 360° (ver comentário em BRAIN_SWING_ANGLE).
+        rotationY: -BRAIN_SWING_ANGLE,
+        duration: BRAIN_SWING_SECONDS,
+        ease: "sine.inOut",
         repeat: -1,
+        yoyo: true,
       });
     });
     return () => ctx.revert();
@@ -334,10 +344,19 @@ export function Loader({ onComplete }) {
 
   useEffect(() => {
     setScrollLocked(true);
+    // Trava o scroll do Lenis (acima) só pausa o scroll suave — a barra de rolagem nativa continua
+    // visível/usável por baixo. Escondendo o overflow do html/body enquanto o Loader está montado,
+    // a barra lateral some junto e volta sozinha quando ele desmonta (Hero aparece).
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
     const timer = setTimeout(() => setSkipVisible(true), SKIP_DELAY_MS);
     return () => {
       clearTimeout(timer);
       setScrollLocked(false);
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
@@ -359,7 +378,7 @@ export function Loader({ onComplete }) {
     <Overlay ref={overlayRef} $closing={closing}>
       <Canvas ref={canvasRef} />
       <BrainWrapper ref={brainWrapperRef}>
-        <BrainImage ref={brainRef} src={BRAIN_SRC} alt="" />
+        <BrainImage ref={brainRotorRef} src={BRAIN_SRC} alt="" />
       </BrainWrapper>
       {stage === "sentence" && <CharGrid model={model} gridRef={containerRef} />}
       {stage === "phraseC" && <PhraseCStage dustRef={dustRef} onDone={handlePhraseCDone} />}
@@ -367,7 +386,7 @@ export function Loader({ onComplete }) {
         <DevClubStage
           dustRef={dustRef}
           overlayRef={overlayRef}
-          brainRef={brainRef}
+          brainRotorRef={brainRotorRef}
           brainWrapperRef={brainWrapperRef}
           onDone={finish}
         />
