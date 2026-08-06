@@ -46,16 +46,6 @@ export const BrainImage = styled.img`
   mix-blend-mode: screen;
 `;
 
-// Anel de brilho que acompanha a borda da "queimada" (ver runBurnReveal em Loader.jsx) — o
-// background é escrito via JS a cada frame, aqui só a camada/blend mode ficam fixos.
-export const BurnGlow = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  mix-blend-mode: screen;
-`;
-
 export const SentenceWrapper = styled.div`
   position: relative;
   z-index: 1;
@@ -97,7 +87,7 @@ export const SkipButton = styled.button`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.textMuted};
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid rgba(96, 165, 250, 0.45);
   border-radius: 999px;
   padding: 0.55em 1.1em;
   cursor: pointer;
@@ -107,6 +97,6 @@ export const SkipButton = styled.button`
 
   &:hover {
     color: ${({ theme }) => theme.colors.text};
-    border-color: ${({ theme }) => theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.blueLight};
   }
 `;

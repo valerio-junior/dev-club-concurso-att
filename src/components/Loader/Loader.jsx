@@ -8,7 +8,6 @@ import {
   Canvas,
   BrainWrapper,
   BrainImage,
-  BurnGlow,
   SentenceWrapper,
   PhraseCWrapper,
   Word,
@@ -39,17 +38,12 @@ const BRAIN_SHATTER_DURATION = 0.85;
 const BRAIN_SHATTER_GRID = 6; // 6x6 = 36 estilhaços
 const EXPLOSION_REVEAL_DURATION = 1.0;
 
-// Azul da marca (theme.colors.blueLight/blue — mesmo tom da fumaça do "DevClub", da teia e agora
-// também do brilho da explosão) — hardcoded aqui porque esse arquivo escreve estilo direto em
-// elementos DOM via JS, fora do fluxo normal do styled-components/ThemeProvider.
-const GLOW_INNER = "96, 165, 250";
-const GLOW_OUTER = "37, 99, 235";
-
 // A página "explode" a partir do centro (onde está o cérebro): um buraco elíptico cresce rápido no
 // meio do Overlay (via CSS mask, então o Canvas/fundo inteiro somem juntos ali) revelando o Hero por
-// baixo, com um anel brilhante acompanhando a borda.
-function runExplosionReveal({ overlayEl, glowEl, duration = EXPLOSION_REVEAL_DURATION, onComplete }) {
-  if (!overlayEl || !glowEl) {
+// baixo. Sem brilho/anel extra de propósito — só o cérebro se estilhaçando e o burst de partículas
+// (ver DevClubStage) carregam a leitura de "explosão".
+function runExplosionReveal({ overlayEl, duration = EXPLOSION_REVEAL_DURATION, onComplete }) {
+  if (!overlayEl) {
     onComplete?.();
     return null;
   }
@@ -75,8 +69,6 @@ function runExplosionReveal({ overlayEl, glowEl, duration = EXPLOSION_REVEAL_DUR
       const mask = `radial-gradient(ellipse ${rx}px ${ry}px at 50% 50%, transparent 0%, transparent 80%, white 100%)`;
       overlayEl.style.maskImage = mask;
       overlayEl.style.webkitMaskImage = mask;
-
-      glowEl.style.background = `radial-gradient(ellipse ${rx}px ${ry}px at 50% 50%, transparent 0%, transparent 74%, rgba(${GLOW_INNER}, 0.95) 87%, rgba(${GLOW_OUTER}, 0.6) 97%, transparent 110%)`;
     },
     onComplete,
   });
@@ -221,8 +213,8 @@ function PhraseCStage({ dustRef, onDone }) {
 // tamanho de repouso menor) para de girar, cresce tremendo até o tamanho "cheio" e se estilhaça em
 // pedaços que voam pra fora — junto com uma explosão de partículas e a página se abrindo a partir do
 // centro, revelando o Hero. Tudo visual, sem DOM próprio: reaproveita o campo de partículas e as
-// refs (Overlay/BurnGlow/brain) já montados no Loader.
-function DevClubStage({ dustRef, overlayRef, glowRef, brainRef, brainWrapperRef, onDone }) {
+// refs (Overlay/brain) já montados no Loader.
+function DevClubStage({ dustRef, overlayRef, brainRef, brainWrapperRef, onDone }) {
   useLayoutEffect(() => {
     const dust = dustRef.current;
     if (!dust) return undefined;
@@ -265,7 +257,6 @@ function DevClubStage({ dustRef, overlayRef, glowRef, brainRef, brainWrapperRef,
         brainTweens.push(
           runExplosionReveal({
             overlayEl: overlayRef.current,
-            glowEl: glowRef.current,
             duration: EXPLOSION_REVEAL_DURATION,
             onComplete: onDone,
           })
@@ -280,7 +271,7 @@ function DevClubStage({ dustRef, overlayRef, glowRef, brainRef, brainWrapperRef,
       brainTweens.forEach((tween) => tween?.kill());
       dust.cancelActive();
     };
-  }, [dustRef, overlayRef, glowRef, brainRef, brainWrapperRef, onDone]);
+  }, [dustRef, overlayRef, brainRef, brainWrapperRef, onDone]);
 
   return null;
 }
@@ -310,7 +301,6 @@ export function Loader({ onComplete }) {
   const canvasRef = useRef(null);
   const dustRef = useRef(null);
   const overlayRef = useRef(null);
-  const glowRef = useRef(null);
   const brainRef = useRef(null);
   const brainWrapperRef = useRef(null);
   const model = useMemo(() => buildPhraseModel(PHRASE_A, PHRASE_B), []);
@@ -371,14 +361,12 @@ export function Loader({ onComplete }) {
       <BrainWrapper ref={brainWrapperRef}>
         <BrainImage ref={brainRef} src={BRAIN_SRC} alt="" />
       </BrainWrapper>
-      <BurnGlow ref={glowRef} />
       {stage === "sentence" && <CharGrid model={model} gridRef={containerRef} />}
       {stage === "phraseC" && <PhraseCStage dustRef={dustRef} onDone={handlePhraseCDone} />}
       {stage === "devclub" && (
         <DevClubStage
           dustRef={dustRef}
           overlayRef={overlayRef}
-          glowRef={glowRef}
           brainRef={brainRef}
           brainWrapperRef={brainWrapperRef}
           onDone={finish}
