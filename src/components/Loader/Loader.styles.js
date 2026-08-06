@@ -25,6 +25,27 @@ export const Canvas = styled.canvas`
   z-index: 0;
 `;
 
+// Centraliza o cérebro por margin fixa (não transform), pra deixar o transform do próprio
+// BrainImage inteiramente livre pro GSAP controlar rotação/escala/tremor sem conflito.
+export const BrainWrapper = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1024px;
+  height: 1024px;
+  margin: -512px 0 0 -512px;
+  z-index: 0;
+  pointer-events: none;
+`;
+
+export const BrainImage = styled.img`
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  mix-blend-mode: screen;
+`;
+
 // Anel de brilho que acompanha a borda da "queimada" (ver runBurnReveal em Loader.jsx) — o
 // background é escrito via JS a cada frame, aqui só a camada/blend mode ficam fixos.
 export const BurnGlow = styled.div`

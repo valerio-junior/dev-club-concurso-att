@@ -46,10 +46,6 @@ export class DustField {
     this.rayBaseOpacity = 0;
     this._rayPulseBoost = 0;
     this._idleRotationEnabled = true;
-    this._trembleMagnitude = 0;
-    this._trembleOffsetX = 0;
-    this._trembleOffsetY = 0;
-    this._trembleStepAt = 0;
     this._tweens = new Set();
 
     this._resizeCanvas();
@@ -410,36 +406,66 @@ export class DustField {
     }));
   }
 
-  // Some com qualquer resquício da fumaça do "DevClub" antes do tremor/queima final — só um fade
-  // limpo, sem espalhar partículas pela tela (isso agora é papel da queima em CSS, não daqui).
+  // Some com qualquer resquício da fumaça do "DevClub" antes da explosão final — só um fade limpo,
+  // sem espalhar partículas pela tela (isso agora é papel do burstExplosion, não daqui).
   fadeSmoke(duration = 0.5) {
     this._track(gsap.to(this.material, { opacity: 0, duration, ease: "power1.out" }));
   }
 
-  // Tremor tecnológico sincronizado — a teia inteira (linhas, nós e pulsos) vibra junto, como um
-  // glitch digital, sinalizando que a intro está prestes a acabar. Desloca os três grupos juntos
-  // (mesma leitura de "todas ao mesmo tempo") em vez de perturbar cada vértice individualmente.
-  tremble(duration = 0.7) {
-    const proxy = { m: 0 };
-    const tl = gsap.timeline();
-    tl.to(proxy, {
-      m: 0.16,
-      duration: duration * 0.25,
+  // Explosão final: o mesmo campo de partículas nasce todo junto perto do centro (onde está o
+  // cérebro) e se espalha rápido em todas as direções, sincronizado com o cérebro explodindo e a
+  // página revelando o Hero por trás.
+  burstExplosion(duration = 0.9, onComplete) {
+    const primary = new THREE.Color(BLUE_COLOR);
+    const white = new THREE.Color(0xffffff);
+    const start = new Float32Array(this.particleCount * 3);
+    const dirs = new Float32Array(this.particleCount * 3);
+
+    for (let i = 0; i < this.particleCount; i += 1) {
+      const ix = i * 3;
+      start[ix] = THREE.MathUtils.randFloatSpread(0.4);
+      start[ix + 1] = THREE.MathUtils.randFloatSpread(0.4);
+      start[ix + 2] = THREE.MathUtils.randFloatSpread(0.4);
+      this.positions[ix] = start[ix];
+      this.positions[ix + 1] = start[ix + 1];
+      this.positions[ix + 2] = start[ix + 2];
+
+      const dir = new THREE.Vector3(
+        THREE.MathUtils.randFloatSpread(2),
+        THREE.MathUtils.randFloatSpread(2),
+        THREE.MathUtils.randFloatSpread(2)
+      ).normalize();
+      dirs[ix] = dir.x;
+      dirs[ix + 1] = dir.y;
+      dirs[ix + 2] = dir.z;
+
+      const color = Math.random() > 0.4 ? primary : white;
+      this.colors[ix] = color.r;
+      this.colors[ix + 1] = color.g;
+      this.colors[ix + 2] = color.b;
+    }
+    this.geometry.attributes.color.needsUpdate = true;
+    this.material.size = 0.35;
+    this.material.opacity = 1;
+
+    const proxy = { t: 0 };
+    this._track(gsap.to(proxy, {
+      t: 1,
+      duration,
       ease: "power2.out",
       onUpdate: () => {
-        this._trembleMagnitude = proxy.m;
+        const distance = proxy.t * 14;
+        for (let i = 0; i < this.particleCount; i += 1) {
+          const ix = i * 3;
+          this.positions[ix] = start[ix] + dirs[ix] * distance;
+          this.positions[ix + 1] = start[ix + 1] + dirs[ix + 1] * distance;
+          this.positions[ix + 2] = start[ix + 2] + dirs[ix + 2] * distance;
+        }
+        this.geometry.attributes.position.needsUpdate = true;
+        this.material.opacity = 1 - proxy.t;
       },
-    });
-    tl.to(proxy, {
-      m: 0,
-      duration: duration * 0.75,
-      ease: "power1.in",
-      onUpdate: () => {
-        this._trembleMagnitude = proxy.m;
-      },
-    });
-    this._track(tl);
-    this.pulseRays(0.5, duration);
+      onComplete,
+    }));
   }
 
   _tick() {
@@ -481,25 +507,6 @@ export class DustField {
     });
     this.networkLines.geometry.attributes.position.needsUpdate = true;
 
-    // Tremor: desloca a teia inteira (linhas, nós, pulsos) junto por um vetor compartilhado, trocado
-    // em passos curtos (não suave) pra ler como um glitch digital em vez de um balanço analógico —
-    // soma-se por cima da respiração ambiente acima, não substitui ela.
-    if (this._trembleMagnitude > 0.001) {
-      const now = performance.now();
-      if (now - this._trembleStepAt > 45) {
-        this._trembleStepAt = now;
-        this._trembleOffsetX = THREE.MathUtils.randFloatSpread(this._trembleMagnitude);
-        this._trembleOffsetY = THREE.MathUtils.randFloatSpread(this._trembleMagnitude);
-      }
-      this.networkLines.position.set(this._trembleOffsetX, this._trembleOffsetY, 0);
-      this.nodeGlowPoints.position.set(this._trembleOffsetX, this._trembleOffsetY, 0);
-      this.energyPoints.position.set(this._trembleOffsetX, this._trembleOffsetY, 0);
-    } else if (this.networkLines.position.x !== 0 || this.networkLines.position.y !== 0) {
-      this.networkLines.position.set(0, 0, 0);
-      this.nodeGlowPoints.position.set(0, 0, 0);
-      this.energyPoints.position.set(0, 0, 0);
-    }
-
     // Avança os pulsos de energia ao longo das cordas da teia; ao chegar no fim de uma corda, pula
     // pra outra corda aleatória.
     const pulsePos = this.energyPoints.geometry.attributes.position.array;
@@ -531,8 +538,8 @@ export class DustField {
     this._resizeCanvas();
   }
 
-  // Mata todas as tweens ativas do campo de partículas (formText/dissolveTextToRight/tremble em
-  // andamento) sem desmontar a cena. Cada estágio que dispara essas animações precisa chamar isso
+  // Mata todas as tweens ativas do campo de partículas (formText/dissolveTextToRight/burstExplosion
+  // em andamento) sem desmontar a cena. Cada estágio que dispara essas animações precisa chamar isso
   // no próprio cleanup — o StrictMode do React roda mount->cleanup->mount uma vez em dev, e como
   // essas tweens vivem fora de qualquer `gsap.context()` (não manipulam refs de DOM), só matar a
   // timeline vazia do estágio não é suficiente pra desfazer o que elas já dispararam.
