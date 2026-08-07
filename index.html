@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
+    <script>
+      // O Loader e a Ecossistema sempre tocam a partir do topo da página — sem isso, um F5 com a
+      // página já rolada faz o navegador restaurar aquela posição de scroll, e a intro inteira
+      // (fixa e travando o scroll) roda fora da área visível.
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/assets/logo-devclub/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

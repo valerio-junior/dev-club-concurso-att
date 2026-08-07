@@ -104,6 +104,13 @@ export function Ecossistema({ active }) {
       finished = true;
       skipHandlerRef.current = null;
       setSkipVisible(false);
+      // A seção nunca desmonta (só encolhe pra altura 0) — se o botão "Pular" ficou com foco (por
+      // clique ou Tab), ele continuaria "focado" pra sempre depois disso, e o filtro de teclas de
+      // scroll do useLenis (isInteractiveElement) passaria a ignorar as setas pro resto da sessão
+      // inteira, achando que ainda há um controle real em foco.
+      if (sectionRef.current?.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
       sectionRef.current.style.clipPath = "none";
       sectionRef.current.style.webkitClipPath = "none";
       const currentHeight = sectionRef.current.getBoundingClientRect().height;
@@ -320,7 +327,8 @@ export function Ecossistema({ active }) {
     };
   }, [active, names]);
 
-  const handleSkipClick = useCallback(() => {
+  const handleSkipClick = useCallback((event) => {
+    event.currentTarget.blur();
     skipHandlerRef.current?.();
   }, []);
 
