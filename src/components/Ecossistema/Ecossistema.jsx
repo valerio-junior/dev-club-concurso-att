@@ -28,7 +28,7 @@ const DRAG_INDEXES = [3, 7]; // quais paradas do cursor são "arrasta" em vez de
 // (fixo, por cima de tudo).
 const RING_RADIUS_X_PCT = 68;
 const RING_RADIUS_Y_PCT = 44;
-const OUTRO_HOLD = 3.5; // segundos com tudo em tela (cursor escondido) antes de começar a desfazer
+const OUTRO_HOLD = 2.3; // segundos com tudo em tela (cursor escondido) antes de começar a desfazer
 const SKIP_DELAY_MS = 1500;
 
 function pickNames(count) {
@@ -193,18 +193,18 @@ export function Ecossistema({ active }) {
 
         if (isDrag) {
           const startPos = { x: originX + (Math.random() - 0.5) * radiusX, y: originY - radiusY - 30 };
-          tl.set(cursor, { left: startPos.x, top: startPos.y }, "+=0.2");
+          tl.set(cursor, { left: startPos.x, top: startPos.y }, "+=0.12");
           tl.set(label, { left: startPos.x, top: startPos.y, opacity: 1 });
-          tl.to(cursor, { scale: 0.78, duration: 0.1, yoyo: true, repeat: 1 });
-          tl.to([cursor, label], { left: pos.x, top: pos.y, duration: 0.9, ease: "power2.inOut" }, "<");
-          tl.to(cursor, { scale: 0.78, duration: 0.1, yoyo: true, repeat: 1 });
+          tl.to(cursor, { scale: 0.78, duration: 0.08, yoyo: true, repeat: 1 });
+          tl.to([cursor, label], { left: pos.x, top: pos.y, duration: 0.55, ease: "power2.inOut" }, "<");
+          tl.to(cursor, { scale: 0.78, duration: 0.08, yoyo: true, repeat: 1 });
         } else {
-          tl.to(cursor, { left: pos.x, top: pos.y, duration: 0.6, ease: "power2.inOut" }, "+=0.25");
-          tl.to(cursor, { scale: 0.75, duration: 0.1, yoyo: true, repeat: 1 });
+          tl.to(cursor, { left: pos.x, top: pos.y, duration: 0.38, ease: "power2.inOut" }, "+=0.15");
+          tl.to(cursor, { scale: 0.75, duration: 0.08, yoyo: true, repeat: 1 });
           tl.fromTo(
             label,
             { opacity: 0, scale: 0.7 },
-            { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" },
+            { opacity: 1, scale: 1, duration: 0.26, ease: "back.out(2)" },
             "<0.05"
           );
         }
@@ -229,10 +229,10 @@ export function Ecossistema({ active }) {
         const outX = pos.x + (dx / dist) * 140;
         const outY = pos.y + (dy / dist) * 140;
 
-        tl.to(cursor, { left: pos.x, top: pos.y, duration: 0.28, ease: "power2.inOut" }, "+=0.08");
-        tl.to(cursor, { scale: 0.78, duration: 0.06, yoyo: true, repeat: 1 });
-        tl.to([cursor, label], { left: outX, top: outY, duration: 0.32, ease: "power1.in" }, "<");
-        tl.to(label, { opacity: 0, duration: 0.24 }, "<0.08");
+        tl.to(cursor, { left: pos.x, top: pos.y, duration: 0.18, ease: "power2.inOut" }, "+=0.05");
+        tl.to(cursor, { scale: 0.78, duration: 0.05, yoyo: true, repeat: 1 });
+        tl.to([cursor, label], { left: outX, top: outY, duration: 0.2, ease: "power1.in" }, "<");
+        tl.to(label, { opacity: 0, duration: 0.16 }, "<0.05");
       }
 
       // ========== SAÍDA: cursor clica no texto ==========
