@@ -5,6 +5,7 @@ import { GlobalStyle } from "./styles/GlobalStyle";
 import { useLenis } from "./hooks/useLenis";
 import { Loader } from "./components/Loader";
 import { Header } from "./components/Header";
+import { Ecossistema } from "./components/Ecossistema";
 import { Hero } from "./components/Hero";
 import { Empresas } from "./components/Empresas";
 import { FormacoesConteudosIA } from "./components/FormacoesConteudosIA";
@@ -30,6 +31,7 @@ function App() {
       {!introDone && <Loader onComplete={handleIntroComplete} />}
       <Header />
       <main>
+        <Ecossistema active={introDone} />
         <Hero />
         <Empresas />
         <FormacoesConteudosIA />

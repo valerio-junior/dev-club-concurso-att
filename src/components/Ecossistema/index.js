@@ -1,0 +1,1 @@
+export { Ecossistema } from "./Ecossistema";

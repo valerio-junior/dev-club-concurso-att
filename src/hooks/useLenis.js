@@ -105,12 +105,20 @@ export function scrollToSection(target, offset = -96) {
   lenisInstance?.scrollTo(target, { offset });
 }
 
-// Usado pelo Loader para impedir scroll (e o ScrollTrigger das seções pinadas) enquanto a intro
-// cinematográfica está rodando.
+// Usado pelo Loader (e pela Ecossistema) para impedir scroll (e o ScrollTrigger das seções pinadas)
+// enquanto uma animação de página inteira está rodando.
 export function setScrollLocked(locked) {
   if (locked) {
     lenisInstance?.stop();
   } else {
     lenisInstance?.start();
   }
+}
+
+// Chamado depois que a altura real do documento muda por fora do fluxo normal de scroll (ex: a
+// Ecossistema colapsando a própria altura pra revelar o Hero) — sem isso o Lenis/ScrollTrigger
+// continuam com os limites de scroll antigos até o próximo resize da janela.
+export function refreshScroll() {
+  lenisInstance?.resize();
+  ScrollTrigger.refresh();
 }
